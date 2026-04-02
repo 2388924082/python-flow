@@ -1,0 +1,19 @@
+{
+  "id": "output",
+  "name": "数据输出",
+  "version": "1.0",
+  "description": "打印输出数据到控制台",
+  "category": "output",
+  "icon": "📤",
+  "type": "python",
+  "entry": "main.py",
+  "config": [],
+  "inputs": [
+    {
+      "key": "data",
+      "name": "输入数据",
+      "type": "json"
+    }
+  ],
+  "outputs": []
+}
