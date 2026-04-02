@@ -1,0 +1,26 @@
+{
+  "id": "input",
+  "name": "数据输入",
+  "version": "1.0",
+  "description": "提供静态数据作为工作流的输入源",
+  "category": "input",
+  "icon": "📥",
+  "type": "python",
+  "entry": "main.py",
+  "config": [
+    {
+      "key": "data",
+      "name": "输入数据 (JSON)",
+      "type": "string",
+      "default": "[]"
+    }
+  ],
+  "inputs": [],
+  "outputs": [
+    {
+      "key": "data",
+      "name": "数据",
+      "type": "json"
+    }
+  ]
+}

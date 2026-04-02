@@ -1,0 +1,113 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body, #root {
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+:root {
+  --bg-primary: #121214;
+  --bg-secondary: #1e1e20;
+  --bg-tertiary: #2d2d30;
+  --bg-hover: #3c3c40;
+  --text-primary: #cccccc;
+  --text-secondary: #858585;
+  --border-color: #3c3c40;
+  --accent-color: #0e639c;
+  --error-color: #f14c4c;
+  --success-color: #89d185;
+}
+
+.react-flow__controls {
+  background: var(--bg-tertiary) !important;
+  border: 1px solid var(--border-color) !important;
+  border-radius: 8px;
+}
+
+.react-flow__controls-button {
+  background: var(--bg-tertiary) !important;
+}
+
+.react-flow__controls-button:hover {
+  background: var(--bg-hover) !important;
+}
+
+.react-flow__controls-button:last-child {
+  border-bottom: none !important;
+}
+
+.react-flow__controls-button svg path {
+  fill: #858585 !important;
+}
+
+.react-flow__controls-button svg {
+  fill: #858585 !important;
+}
+
+.react-flow__minimap svg path {
+  fill: #858585 !important;
+}
+
+.submenu-wrapper .submenu {
+  display: none;
+}
+
+.submenu-wrapper:hover .submenu {
+  display: block;
+}
+
+.context-menu {
+  position: relative;
+}
+
+.react-flow__minimap svg {
+  fill: #858585 !important;
+}
+
+.react-flow__minimap {
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+}
+
+.react-flow__minimap-mask {
+  fill: var(--bg-hover);
+}
+
+.react-flow__minimap-node {
+  fill: var(--text-secondary);
+}
+
+.react-flow__edge-path {
+  stroke: var(--border-color);
+  stroke-width: 2;
+}
+
+.react-flow__edge.selected .react-flow__edge-path {
+  stroke: var(--accent-color);
+}
+
+.react-flow__handle {
+  background: var(--text-secondary);
+}
+
+.react-flow__selection {
+  background: var(--accent-color);
+  opacity: 0.1;
+}
+
+.react-flow__nodesselection-rect {
+  fill: var(--accent-color);
+  fill-opacity: 0.1;
+}

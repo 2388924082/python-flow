@@ -1,0 +1,38 @@
+{
+  "id": "filter",
+  "name": "数据过滤器",
+  "version": "1.0",
+  "description": "根据条件过滤输入数据",
+  "category": "process",
+  "icon": "🔍",
+  "type": "python",
+  "entry": "main.py",
+  "config": [
+    {
+      "key": "threshold",
+      "name": "阈值",
+      "type": "number",
+      "default": 0.5
+    },
+    {
+      "key": "field",
+      "name": "过滤字段",
+      "type": "string",
+      "default": "score"
+    }
+  ],
+  "inputs": [
+    {
+      "key": "data",
+      "name": "输入数据",
+      "type": "json"
+    }
+  ],
+  "outputs": [
+    {
+      "key": "result",
+      "name": "过滤结果",
+      "type": "json"
+    }
+  ]
+}
