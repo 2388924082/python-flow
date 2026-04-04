@@ -1,0 +1,32 @@
+{
+  "id": "json_parser",
+  "name": "JSON解析器",
+  "version": "1.0",
+  "description": "解析和转换JSON数据",
+  "icon": "📋",
+  "type": "python",
+  "entry": "main.py",
+  "config": [
+    {
+      "key": "format",
+      "name": "输出格式",
+      "type": "select",
+      "default": "pretty",
+      "options": ["pretty", "compact", "raw"]
+    }
+  ],
+  "inputs": [
+    {
+      "key": "data",
+      "name": "输入数据",
+      "type": "string"
+    }
+  ],
+  "outputs": [
+    {
+      "key": "result",
+      "name": "解析结果",
+      "type": "json"
+    }
+  ]
+}

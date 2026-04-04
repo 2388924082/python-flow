@@ -1,15 +1,17 @@
+import asyncio
 import json
 import logging
 import os
 import sys
 import uuid
 from pathlib import Path
+from typing import Dict, Set
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 
 from engine import (
@@ -25,6 +27,37 @@ logger = logging.getLogger(__name__)
 
 app = FastAPI(title="AI Workflow Orchestrator")
 
+
+class ConnectionManager:
+    def __init__(self):
+        self.active_connections: Dict[str, Set[WebSocket]] = {}
+
+    async def connect(self, task_id: str, websocket: WebSocket):
+        await websocket.accept()
+        if task_id not in self.active_connections:
+            self.active_connections[task_id] = set()
+        self.active_connections[task_id].add(websocket)
+
+    def disconnect(self, task_id: str, websocket: WebSocket):
+        if task_id in self.active_connections:
+            self.active_connections[task_id].discard(websocket)
+            if not self.active_connections[task_id]:
+                del self.active_connections[task_id]
+
+    async def broadcast(self, task_id: str, message: dict):
+        if task_id in self.active_connections:
+            disconnected = set()
+            for connection in self.active_connections[task_id]:
+                try:
+                    await connection.send_json(message)
+                except Exception:
+                    disconnected.add(connection)
+            for conn in disconnected:
+                self.active_connections[task_id].discard(conn)
+
+
+manager = ConnectionManager()
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
@@ -32,6 +65,8 @@ app.add_middleware(
         "http://127.0.0.1:3000",
         "http://localhost:5173",
         "http://127.0.0.1:5173",
+        "http://localhost:5174",
+        "http://127.0.0.1:5174",
     ],
     allow_credentials=True,
     allow_methods=["*"],
@@ -51,6 +86,11 @@ executor = Executor(executions_dir=EXECUTIONS_DIR)
 @app.get("/api/nodes")
 def get_nodes():
     return plugin_loader.get_all()
+
+
+@app.get("/api/categories")
+def get_categories():
+    return plugin_loader.get_categories()
 
 
 @app.get("/api/workflows")
@@ -122,7 +162,7 @@ def save_workflow(name: str, workflow: dict):
 
 
 @app.post("/api/execute")
-def execute(workflow: dict):
+async def execute(workflow: dict):
     task_id = str(uuid.uuid4())
 
     try:
@@ -135,10 +175,22 @@ def execute(workflow: dict):
         raise HTTPException(status_code=400, detail={"errors": errors})
 
     StateManager.create(task_id, len(wf.nodes))
-    executor.run(task_id, wf)
+    await manager.broadcast(task_id, {"type": "log", "level": "INFO", "message": "Starting workflow execution", "nodeId": None})
+    loop = asyncio.get_event_loop()
+    executor.run(task_id, wf, manager, loop)
 
     logger.info(f"Execution started: {task_id}")
     return {"taskId": task_id}
+
+
+@app.websocket("/ws/execute/{task_id}")
+async def websocket_execute(websocket: WebSocket, task_id: str):
+    await manager.connect(task_id, websocket)
+    try:
+        while True:
+            data = await websocket.receive_text()
+    except WebSocketDisconnect:
+        manager.disconnect(task_id, websocket)
 
 
 @app.get("/api/execute/{task_id}")

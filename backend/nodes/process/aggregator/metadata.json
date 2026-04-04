@@ -1,0 +1,37 @@
+{
+  "id": "aggregator",
+  "name": "数据聚合器",
+  "version": "1.0",
+  "description": "聚合多个输入数据源",
+  "icon": "🔗",
+  "type": "python",
+  "entry": "main.py",
+  "config": [
+    {
+      "key": "strategy",
+      "name": "聚合策略",
+      "type": "select",
+      "default": "merge",
+      "options": ["merge", "concat", "zip"]
+    }
+  ],
+  "inputs": [
+    {
+      "key": "data1",
+      "name": "数据源1",
+      "type": "json"
+    },
+    {
+      "key": "data2",
+      "name": "数据源2",
+      "type": "json"
+    }
+  ],
+  "outputs": [
+    {
+      "key": "result",
+      "name": "聚合结果",
+      "type": "json"
+    }
+  ]
+}

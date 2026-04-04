@@ -1,0 +1,37 @@
+{
+  "id": "csv_converter",
+  "name": "CSV转换器",
+  "version": "1.0",
+  "description": "将CSV转换为JSON格式",
+  "icon": "📊",
+  "type": "python",
+  "entry": "main.py",
+  "config": [
+    {
+      "key": "delimiter",
+      "name": "分隔符",
+      "type": "string",
+      "default": ","
+    },
+    {
+      "key": "has_header",
+      "name": "包含表头",
+      "type": "boolean",
+      "default": true
+    }
+  ],
+  "inputs": [
+    {
+      "key": "csv_data",
+      "name": "CSV数据",
+      "type": "string"
+    }
+  ],
+  "outputs": [
+    {
+      "key": "json_data",
+      "name": "JSON数据",
+      "type": "json"
+    }
+  ]
+}

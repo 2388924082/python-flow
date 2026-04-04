@@ -1,6 +1,7 @@
-$BackendDir = "e:\Desktop\Ai_tool\workflow\backend"
-$FrontendDir = "e:\Desktop\Ai_tool\workflow\frontend"
-$RootDir = "e:\Desktop\Ai_tool\workflow"
+$ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
+$BackendDir = Join-Path $ScriptDir "backend"
+$FrontendDir = Join-Path $ScriptDir "frontend"
+$RootDir = $ScriptDir
 
 Write-Host "[Starting Backend] FastAPI on http://127.0.0.1:8000" -ForegroundColor Cyan
 Start-Process powershell -ArgumentList "-NoExit", "-Command", "cd '$BackendDir'; `$env:PYTHONPATH='$RootDir'; python -m uvicorn main:app --reload --host 127.0.0.1 --port 8000"

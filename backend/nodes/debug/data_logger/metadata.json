@@ -1,0 +1,38 @@
+{
+  "id": "data_logger",
+  "name": "数据日志",
+  "version": "1.0",
+  "description": "记录和输出数据日志",
+  "icon": "📝",
+  "type": "python",
+  "entry": "main.py",
+  "config": [
+    {
+      "key": "level",
+      "name": "日志级别",
+      "type": "select",
+      "default": "info",
+      "options": ["debug", "info", "warn", "error"]
+    },
+    {
+      "key": "message",
+      "name": "自定义消息",
+      "type": "string",
+      "default": ""
+    }
+  ],
+  "inputs": [
+    {
+      "key": "data",
+      "name": "输入数据",
+      "type": "json"
+    }
+  ],
+  "outputs": [
+    {
+      "key": "passthrough",
+      "name": "透传数据",
+      "type": "json"
+    }
+  ]
+}

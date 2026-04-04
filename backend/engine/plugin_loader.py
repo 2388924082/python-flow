@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import Any
 
 from .exceptions import PluginExecutionError, PluginNotFoundError
-from .models import ConfigField, PluginMetadata, Port
+from .models import CategoryMetadata, ConfigField, PluginMetadata, Port
 
 
 class BaseExecutor(ABC):
@@ -118,78 +118,129 @@ class Plugin:
         self.path = path
 
 
+def _load_plugin_from_dir(plugin_path: str, category: str) -> PluginMetadata | None:
+    metadata_file = os.path.join(plugin_path, "metadata.json")
+    if not os.path.exists(metadata_file):
+        return None
+
+    try:
+        with open(metadata_file, "r", encoding="utf-8") as f:
+            data = json.load(f)
+
+        config = [
+            ConfigField(
+                key=c["key"],
+                name=c["name"],
+                type=c["type"],
+                default=c.get("default"),
+                options=c.get("options"),
+            )
+            for c in data.get("config", [])
+        ]
+
+        inputs = [
+            Port(key=p["key"], name=p["name"], type=p["type"])
+            for p in data.get("inputs", [])
+        ]
+
+        outputs = [
+            Port(key=p["key"], name=p["name"], type=p["type"])
+            for p in data.get("outputs", [])
+        ]
+
+        metadata = PluginMetadata(
+            id=data["id"],
+            name=data["name"],
+            version=data.get("version", "1.0"),
+            description=data.get("description", ""),
+            category=category,
+            icon=data.get("icon", "🔧"),
+            type=data.get("type", "python"),
+            entry=data.get("entry", "main.py"),
+            config=config,
+            inputs=inputs,
+            outputs=outputs,
+            config_mapping=data.get("config_mapping"),
+        )
+
+        return metadata
+
+    except Exception as e:
+        print(f"Failed to load plugin from {plugin_path}: {e}")
+        return None
+
+
+def _load_category(category_path: str, category_id: str) -> CategoryMetadata | None:
+    category_file = os.path.join(category_path, "category.json")
+    if os.path.exists(category_file):
+        try:
+            with open(category_file, "r", encoding="utf-8") as f:
+                data = json.load(f)
+            return CategoryMetadata(
+                id=category_id,
+                name=data.get("name", category_id),
+                icon=data.get("icon", "📁"),
+                order=data.get("order", 0),
+            )
+        except Exception as e:
+            print(f"Failed to load category {category_id}: {e}")
+    return CategoryMetadata(
+        id=category_id,
+        name=category_id,
+        icon="📁",
+        order=0,
+    )
+
+
 class PluginLoader:
     _plugins: dict[str, Plugin] = {}
     _scan_path: str | None = None
+    _categories: dict[str, CategoryMetadata] = {}
 
     @classmethod
     def scan(cls, nodes_dir: str) -> list[PluginMetadata]:
         cls._plugins.clear()
+        cls._categories.clear()
         cls._scan_path = nodes_dir
 
         if not os.path.exists(nodes_dir):
             return []
 
         result = []
-        for item in os.listdir(nodes_dir):
-            plugin_path = os.path.join(nodes_dir, item)
-            if not os.path.isdir(plugin_path):
+
+        for category in sorted(os.listdir(nodes_dir)):
+            category_path = os.path.join(nodes_dir, category)
+            if not os.path.isdir(category_path):
                 continue
 
-            metadata_file = os.path.join(plugin_path, "metadata.json")
-            if not os.path.exists(metadata_file):
-                continue
+            category_meta = _load_category(category_path, category)
+            cls._categories[category] = category_meta
 
-            try:
-                with open(metadata_file, "r", encoding="utf-8") as f:
-                    data = json.load(f)
+            for plugin_name in sorted(os.listdir(category_path)):
+                plugin_path = os.path.join(category_path, plugin_name)
+                if not os.path.isdir(plugin_path):
+                    continue
 
-                config = [
-                    ConfigField(
-                        key=c["key"],
-                        name=c["name"],
-                        type=c["type"],
-                        default=c.get("default"),
-                        options=c.get("options"),
-                    )
-                    for c in data.get("config", [])
-                ]
-
-                inputs = [
-                    Port(key=p["key"], name=p["name"], type=p["type"])
-                    for p in data.get("inputs", [])
-                ]
-
-                outputs = [
-                    Port(key=p["key"], name=p["name"], type=p["type"])
-                    for p in data.get("outputs", [])
-                ]
-
-                metadata = PluginMetadata(
-                    id=data["id"],
-                    name=data["name"],
-                    version=data.get("version", "1.0"),
-                    description=data.get("description", ""),
-                    category=data.get("category", "other"),
-                    icon=data.get("icon", "🔧"),
-                    type=data.get("type", "python"),
-                    entry=data.get("entry", "main.py"),
-                    config=config,
-                    inputs=inputs,
-                    outputs=outputs,
-                    config_mapping=data.get("config_mapping"),
-                )
+                metadata = _load_plugin_from_dir(plugin_path, category)
+                if metadata is None:
+                    continue
 
                 abs_plugin_path = os.path.abspath(plugin_path)
                 plugin = Plugin(metadata=metadata, path=abs_plugin_path)
                 cls._plugins[metadata.id] = plugin
                 result.append(metadata)
 
-            except Exception as e:
-                print(f"Failed to load plugin from {plugin_path}: {e}")
-                continue
-
         return result
+
+    @classmethod
+    def get_categories(cls) -> list[CategoryMetadata]:
+        categories = list(cls._categories.values())
+        categories.sort(key=lambda c: c.order)
+        return categories
+
+    @classmethod
+    def get_plugins_by_category(cls, category_id: str) -> list[PluginMetadata]:
+        return [p.metadata for p in cls._plugins.values() if p.metadata.category == category_id]
 
     @classmethod
     def get_plugin(cls, plugin_id: str) -> Plugin:

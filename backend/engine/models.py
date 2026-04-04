@@ -19,6 +19,40 @@ class Port:
 
 
 @dataclass
+class CategoryMetadata:
+    id: str
+    name: str
+    icon: str
+    order: int = 0
+
+
+@dataclass
+class Progress:
+    current: int
+    total: int
+    current_node: str | None = None
+
+
+@dataclass
+class LogEntry:
+    timestamp: str
+    level: str
+    message: str
+    node_id: str | None = None
+
+
+@dataclass
+class ExecutionState:
+    status: str
+    task_id: str
+    progress: Progress
+    logs: list[LogEntry]
+    result: Any
+    error: str | None
+    failed_node: str | None = None
+
+
+@dataclass
 class PluginMetadata:
     id: str
     name: str
@@ -51,8 +85,8 @@ class NodeData:
 @dataclass
 class EdgeData:
     id: str
-    source: str
     target: str
+    source: str
     source_handle: str
     target_handle: str
 
@@ -98,14 +132,14 @@ class Workflow:
                 id=e["id"],
                 source=e["source"],
                 target=e["target"],
-                source_handle=e.get("sourceHandle", e.get("source_handle", "")),
-                target_handle=e.get("targetHandle", e.get("target_handle", "")),
+                source_handle=e.get("sourceHandle", ""),
+                target_handle=e.get("targetHandle", ""),
             ))
         return cls(
-            name=data["name"],
+            name=data.get("name", "Untitled"),
             version=data.get("version", "1.0"),
             nodes=nodes,
-            edges=edges
+            edges=edges,
         )
 
     def to_dict(self) -> dict:
@@ -119,71 +153,19 @@ class Workflow:
                     "name": n.name,
                     "icon": n.icon,
                     "category": n.category,
-                    "config": [c.__dict__ for c in n.config],
-                    "inputs": [p.__dict__ for p in n.inputs],
-                    "outputs": [p.__dict__ for p in n.outputs],
-                    "configValues": n.config_values,
                     "position": n.position,
+                    "config": [
+                        {"key": c.key, "name": c.name, "type": c.type, "default": c.default, "options": c.options}
+                        for c in n.config
+                    ],
+                    "inputs": [{"key": p.key, "name": p.name, "type": p.type} for p in n.inputs],
+                    "outputs": [{"key": p.key, "name": p.name, "type": p.type} for p in n.outputs],
+                    "configValues": n.config_values,
                 }
                 for n in self.nodes
             ],
             "edges": [
-                {
-                    "id": e.id,
-                    "source": e.source,
-                    "target": e.target,
-                    "sourceHandle": e.source_handle,
-                    "targetHandle": e.target_handle,
-                }
+                {"id": e.id, "source": e.source, "target": e.target, "sourceHandle": e.source_handle, "targetHandle": e.target_handle}
                 for e in self.edges
             ],
-        }
-
-
-@dataclass
-class LogEntry:
-    timestamp: str
-    level: str
-    message: str
-    node_id: str | None = None
-
-
-@dataclass
-class Progress:
-    current: int
-    total: int
-    current_node: str | None
-
-
-@dataclass
-class ExecutionState:
-    status: str
-    task_id: str
-    progress: Progress
-    logs: list[LogEntry]
-    result: Any = None
-    error: str | None = None
-    failed_node: str | None = None
-
-    def to_dict(self) -> dict:
-        return {
-            "status": self.status,
-            "taskId": self.task_id,
-            "progress": {
-                "current": self.progress.current,
-                "total": self.progress.total,
-                "currentNode": self.progress.current_node,
-            },
-            "logs": [
-                {
-                    "timestamp": log.timestamp,
-                    "level": log.level,
-                    "message": log.message,
-                    "nodeId": log.node_id,
-                }
-                for log in self.logs
-            ],
-            "result": self.result,
-            "error": self.error,
-            "failedNode": self.failed_node,
         }
