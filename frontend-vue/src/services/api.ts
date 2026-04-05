@@ -58,3 +58,19 @@ export async function stopExecution(taskId: string): Promise<void> {
   })
   if (!res.ok) throw new Error(`Failed to stop execution: ${taskId}`)
 }
+
+export async function renameWorkflow(oldName: string, newName: string): Promise<void> {
+  const res = await fetch(`${API_BASE}/workflows/rename`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ oldName, newName })
+  })
+  if (!res.ok) throw new Error(`Failed to rename workflow: ${oldName}`)
+}
+
+export async function deleteWorkflow(name: string): Promise<void> {
+  const res = await fetch(`${API_BASE}/workflows/${name}`, {
+    method: 'DELETE'
+  })
+  if (!res.ok) throw new Error(`Failed to delete workflow: ${name}`)
+}

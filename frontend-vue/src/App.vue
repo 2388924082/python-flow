@@ -6,8 +6,10 @@ import FloatingToolbar from './components/FloatingToolbar.vue'
 import WorkflowCanvas from './components/WorkflowCanvas.vue'
 import BottomPanel from './components/BottomPanel.vue'
 import SaveDialog from './components/SaveDialog.vue'
+import ToastContainer from './components/ToastContainer.vue'
 import type { PluginDefinition, CategoryDefinition, LogEntry, Position } from './types/api'
-import { getNodes, listWorkflows, getCategories, saveWorkflow, loadWorkflow as loadWorkflowApi, executeWorkflow } from './services/api'
+import { getNodes, listWorkflows, getCategories, saveWorkflow, loadWorkflow as loadWorkflowApi, executeWorkflow, getExecutionStatus, stopExecution, renameWorkflow, deleteWorkflow } from './services/api'
+import { useToast } from './composables/useToast'
 
 interface NodeItem {
   id: string
@@ -55,6 +57,9 @@ const addLog = (message: string, level: 'debug' | 'info' | 'warn' | 'error', sou
   }
   logs.value.push(entry)
 }
+
+const toast = useToast()
+provide('toast', toast)
 
 const clearLogs = () => {
   logs.value = []
@@ -262,6 +267,34 @@ const handleLoadData = async () => {
   }
 }
 
+const handleRename = async (oldName: string, newName: string) => {
+  try {
+    await renameWorkflow(oldName, newName)
+    if (currentWorkflow.value === oldName) {
+      currentWorkflow.value = newName
+    }
+    await handleLoadData()
+    addLog(`Renamed "${oldName}" to "${newName}"`, 'info')
+  } catch (e) {
+    addLog(`Rename failed: ${e instanceof Error ? e.message : 'Unknown error'}`, 'error')
+  }
+}
+
+const handleDelete = async (name: string) => {
+  try {
+    await deleteWorkflow(name)
+    if (currentWorkflow.value === name) {
+      currentWorkflow.value = null
+      nodes.value = []
+      edges.value = []
+    }
+    await handleLoadData()
+    addLog(`Deleted "${name}"`, 'info')
+  } catch (e) {
+    addLog(`Delete failed: ${e instanceof Error ? e.message : 'Unknown error'}`, 'error')
+  }
+}
+
 onMounted(() => {
   handleLoadData()
   initLogWebSocket()
@@ -365,6 +398,8 @@ const handleStop = () => {
         @select="handleLoad"
         @refresh="handleLoadData"
         @toggleCollapse="fileListCollapsed = !fileListCollapsed"
+        @rename="handleRename"
+        @delete="handleDelete"
       />
       <div v-if="fileListCollapsed" class="expand-btn-v" @click="fileListCollapsed = false">▶</div>
       <div v-else class="resize-handle-v" @mousedown="startResizeH"></div>
@@ -394,6 +429,7 @@ const handleStop = () => {
       @confirm="handleSaveConfirm"
       @cancel="handleSaveCancel"
     />
+    <ToastContainer />
   </div>
 </template>
 

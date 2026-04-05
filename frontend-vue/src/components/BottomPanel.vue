@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, inject } from 'vue'
 
 const levels = ['debug', 'info', 'warn', 'error']
 
@@ -21,6 +21,8 @@ const emit = defineEmits<{
   toggleCollapse: []
 }>()
 
+const toast = inject<any>('toast')
+
 const filterLevel = ref<string | null>(null)
 
 const filteredLogs = (logs: LogEntry[]) => {
@@ -39,6 +41,18 @@ const getLevelIcon = (level: string) => {
     default: return '📝'
   }
 }
+
+const copyLogs = async (logs: LogEntry[]) => {
+  const text = filteredLogs(logs).map(log =>
+    `${log.timestamp} ${log.source} ${log.level.toUpperCase()} ${log.message}`
+  ).join('\n')
+  try {
+    await navigator.clipboard.writeText(text)
+    toast?.success('复制成功')
+  } catch (e) {
+    toast?.error('复制失败')
+  }
+}
 </script>
 
 <template>
@@ -52,6 +66,7 @@ const getLevelIcon = (level: string) => {
             {{ level.toUpperCase() }}
           </option>
         </select>
+        <button class="btn-clear" @click="copyLogs(logs)">复制</button>
         <button class="btn-clear" @click="emit('clear')">清空</button>
         <button class="collapse-btn" @click="emit('toggleCollapse')">▼</button>
       </div>
@@ -129,6 +144,8 @@ const getLevelIcon = (level: string) => {
   flex: 1;
   overflow-y: auto;
   padding: var(--spacing-xs);
+  user-select: text;
+  -webkit-user-select: text;
 }
 
 .log-entry {
@@ -139,6 +156,8 @@ const getLevelIcon = (level: string) => {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  user-select: text;
+  -webkit-user-select: text;
 }
 
 .log-entry:hover {
