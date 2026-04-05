@@ -118,6 +118,24 @@ backend/nodes/process/data_transformer/
 | select | 下拉选择 | string |
 | file | 文件选择 | string |
 
+### file 类型扩展字段
+
+当 `config` 中有 `type: "file"` 时，可选添加 `file_type` 限制文件类型：
+
+```json
+{
+  "key": "input_file",
+  "name": "输入文件",
+  "type": "file",
+  "file_type": "csv",
+  "default": ""
+}
+```
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| file_type | string | 限制文件类型，如 `csv`、`json`、`txt` |
+
 ### inputs/outputs 端口类型
 
 ```json

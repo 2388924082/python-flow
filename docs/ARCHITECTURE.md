@@ -264,6 +264,79 @@ app.add_middleware(
 2. 在 `components/` 添加组件
 3. App.vue 引入使用
 
+## API 端点总览
+
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| GET | `/api/nodes` | 获取插件列表 |
+| POST | `/api/nodes/scan` | 重新扫描插件目录 |
+| GET | `/api/categories` | 获取分类列表 |
+| GET | `/api/workflows` | 获取工作流列表 |
+| GET | `/api/workflows/{name}` | 加载工作流 |
+| POST | `/api/workflows/{name}` | 保存工作流 |
+| DELETE | `/api/workflows/{name}` | 删除工作流 |
+| POST | `/api/workflows/{old}/rename` | 重命名工作流 |
+| POST | `/api/execute` | 执行工作流 |
+| WS | `/ws/logs` | WebSocket 日志通道 |
+
+**响应格式规范**：
+- API 响应字段使用 **驼峰命名**（camelCase），如 `taskId`、`currentNode`、`failedNode`
+- 前端 `ExecutionState` 类型需匹配此格式
+
+## 技术约束
+
+### 路径策略
+
+| 场景 | 策略 |
+|------|------|
+| 插件路径 | 绝对路径 |
+| 工作流文件 | 绝对路径 |
+| 执行时工作目录 (cwd) | 后端根目录 |
+
+**重要**：插件执行时，确保使用绝对路径拼接，避免相对路径错误。
+
+### 节点 ID 生成规则
+
+```
+前端拖拽节点到画布时生成
+格式: node_{uuid_short}
+示例: node_a1b2c3d4
+```
+
+- ID 在工作流内唯一
+- 同一个插件类型可实例化多个节点
+- 删除节点后 ID 不复用
+
+### 并发控制
+
+```
+用户点击"执行"
+       ↓
+检查是否有任务正在执行
+       ↓
+有 → 返回 {error: "已有任务执行中", code: 409}
+无 → 启动执行
+```
+
+### 执行超时处理
+
+```
+每个节点执行超时时间: 300 秒（可配置）
+       ↓
+超时 → 终止进程，标记任务失败
+       ↓
+返回 {status: "failed", error: "节点 xxx 执行超时"}
+```
+
+## 常见问题根因
+
+| 问题 | 根因 | 预防措施 |
+|------|------|----------|
+| `ModuleNotFoundError` | Python 导入路径未设置 | 入口脚本使用 `python -m uvicorn` |
+| 插件执行路径错误 | 相对路径拼接 + cwd 冲突 | 统一使用绝对路径 |
+| 数据传递失败 | `sourceHandle` vs `source_handle` 命名不一致 | API 格式规范已明确 |
+| output 节点收到 0 items | `_gather_inputs` 未正确映射 handle | 插件测试覆盖 |
+
 ## 下一步
 
 - [快速启动](QUICK_START.md) - 本地运行
