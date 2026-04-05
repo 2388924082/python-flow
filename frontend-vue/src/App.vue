@@ -137,7 +137,11 @@ const handleConnect = (connection: { source: string; target: string }) => {
 provide('deleteNode', handleDeleteNode)
 
 const handleSave = async () => {
-  showSaveDialog.value = true
+  if (currentWorkflow.value) {
+    await handleSaveConfirm(currentWorkflow.value)
+  } else {
+    showSaveDialog.value = true
+  }
 }
 
 const handleSaveConfirm = async (name: string) => {
@@ -168,11 +172,11 @@ const handleSaveConfirm = async (name: string) => {
   }
   try {
     await saveWorkflow(currentWorkflow.value, workflow as any)
-    addLog(`Saved workflow: ${currentWorkflow.value}`, 'info')
+    toast.success('保存成功')
     const workflows = await listWorkflows()
     workflowList.value = workflows
   } catch (e) {
-    addLog(`Failed to save: ${e instanceof Error ? e.message : 'Unknown error'}`, 'error')
+    toast.error(`保存失败: ${e instanceof Error ? e.message : '未知错误'}`)
   }
 }
 

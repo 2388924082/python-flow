@@ -9,8 +9,8 @@
       "icon": "📥",
       "category": "input",
       "position": {
-        "x": 388,
-        "y": 81
+        "x": 137,
+        "y": 219
       },
       "config": [
         {
@@ -40,8 +40,8 @@
       "icon": "📤",
       "category": "output",
       "position": {
-        "x": 196,
-        "y": 353
+        "x": 579,
+        "y": 91
       },
       "config": [],
       "inputs": [

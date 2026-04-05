@@ -9,8 +9,8 @@
       "icon": "📤",
       "category": "output",
       "position": {
-        "x": 146,
-        "y": 191
+        "x": 472,
+        "y": 243
       },
       "config": [],
       "inputs": [
@@ -30,8 +30,8 @@
       "icon": "📥",
       "category": "input",
       "position": {
-        "x": 96,
-        "y": 168
+        "x": 100,
+        "y": 199
       },
       "config": [
         {
@@ -56,13 +56,13 @@
     },
     {
       "id": "node_1775383660753",
-      "type": "input",
+      "type": "node_1775383660753",
       "name": "数据输入",
       "icon": "📥",
       "category": "input",
       "position": {
-        "x": 469,
-        "y": 196
+        "x": 305,
+        "y": 71
       },
       "config": [
         {
