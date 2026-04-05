@@ -31,7 +31,7 @@ const fileListWidth = ref(200)
 const fileListCollapsed = ref(false)
 const bottomPanelHeight = ref(150)
 const bottomPanelCollapsed = ref(false)
-const showMinimap = ref(true)
+const showMinimap = ref(false)
 const isResizingH = ref(false)
 const isResizingV = ref(false)
 
