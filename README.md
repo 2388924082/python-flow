@@ -1,6 +1,6 @@
 # python-flow
 
-python自动化流程编排系统，后端是python，前端是基于vueflow的可视化流程编排界面。
+python自动化流程编排系统，后端是python，前端是基于vueflow的可视化流程编排web界面。
 
 可将任意 Python 自动化脚本（Python / Executable / Batch / MCP / API）封装为节点，进行灵活的工作流编排。
 
