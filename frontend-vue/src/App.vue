@@ -117,6 +117,13 @@ const handleUpdateNodeConfig = (nodeId: string, key: string, value: unknown) => 
   }
 }
 
+const handlePositionChange = (nodeId: string, position: { x: number; y: number }) => {
+  const node = nodes.value.find(n => n.id === nodeId)
+  if (node) {
+    node.position = position
+  }
+}
+
 const handleConnect = (connection: { source: string; target: string }) => {
   const id = `edge_${Date.now()}`
   edges.value.push({
@@ -395,6 +402,7 @@ const handleToggleMinimap = () => {
           @delete-node="handleDeleteNode"
           @update-node-config="handleUpdateNodeConfig"
           @connect="handleConnect"
+          @position-change="handlePositionChange"
         />
         <div v-if="bottomPanelCollapsed" class="expand-btn-h" @click="bottomPanelCollapsed = false">▲</div>
         <template v-else>

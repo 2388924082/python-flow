@@ -53,6 +53,37 @@
       "configValues": {
         "data": "[]"
       }
+    },
+    {
+      "id": "node_1775383660753",
+      "type": "input",
+      "name": "数据输入",
+      "icon": "📥",
+      "category": "input",
+      "position": {
+        "x": 469,
+        "y": 196
+      },
+      "config": [
+        {
+          "key": "data",
+          "name": "输入数据 (JSON)",
+          "type": "string",
+          "default": "[]",
+          "options": null
+        }
+      ],
+      "inputs": [],
+      "outputs": [
+        {
+          "key": "data",
+          "name": "数据",
+          "type": "json"
+        }
+      ],
+      "configValues": {
+        "data": "[]"
+      }
     }
   ],
   "edges": [
