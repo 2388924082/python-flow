@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, markRaw } from 'vue'
-import { VueFlow, useVueFlow } from '@vue-flow/core'
+import { VueFlow, useVueFlow, MarkerType } from '@vue-flow/core'
 import { Background } from '@vue-flow/background'
 import { Controls } from '@vue-flow/controls'
 import { MiniMap } from '@vue-flow/minimap'
@@ -43,6 +43,14 @@ const { project } = useVueFlow()
 
 const nodeTypes = {
   dynamic: markRaw(DynamicNode) as any
+}
+
+const defaultEdgeOptions = {
+  markerEnd: {
+    type: MarkerType.ArrowClosed,
+    width: 20,
+    height: 20
+  }
 }
 
 const isPanMode = ref(false)
@@ -207,6 +215,7 @@ const onDrop = (event: DragEvent) => {
       :nodes="nodes || []"
       :edges="edges || []"
       :node-types="nodeTypes"
+      :default-edge-options="defaultEdgeOptions"
       :default-viewport="{ zoom: 1 }"
       :min-zoom="0.2"
       :max-zoom="2"
