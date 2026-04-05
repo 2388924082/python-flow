@@ -232,7 +232,7 @@ const cancelDelete = () => {
 }
 
 .context-menu-item.danger {
-  color: var(--color-error);
+  color: var(--error-color);
 }
 
 .context-menu-item.danger:hover {
@@ -290,7 +290,8 @@ const cancelDelete = () => {
 }
 
 .btn-cancel,
-.btn-confirm {
+.btn-confirm,
+.btn-danger {
   padding: var(--spacing-sm) var(--spacing-md);
   border-radius: var(--radius-md);
   font-size: 13px;
@@ -317,12 +318,12 @@ const cancelDelete = () => {
 }
 
 .btn-danger {
-  background: var(--color-error);
-  color: white;
+  background: var(--bg-tertiary);
+  color: var(--error-color);
 }
 
 .btn-danger:hover {
-  opacity: 0.9;
+  background: var(--bg-primary);
 }
 
 .delete-dialog-message {
