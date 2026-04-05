@@ -1,10 +1,10 @@
 {
-  "name": "3333",
+  "name": "333",
   "version": "1.0",
   "nodes": [
     {
       "id": "node_1775365813716",
-      "type": "output",
+      "type": "node_1775365813716",
       "name": "数据输出",
       "icon": "📤",
       "category": "output",
@@ -25,7 +25,7 @@
     },
     {
       "id": "node_1775365815781",
-      "type": "input",
+      "type": "node_1775365815781",
       "name": "数据输入",
       "icon": "📥",
       "category": "input",

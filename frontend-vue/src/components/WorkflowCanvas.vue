@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, markRaw } from 'vue'
 import { VueFlow, useVueFlow } from '@vue-flow/core'
 import { Background } from '@vue-flow/background'
 import { Controls } from '@vue-flow/controls'
@@ -42,7 +42,7 @@ const emit = defineEmits<{
 const { project } = useVueFlow()
 
 const nodeTypes = {
-  dynamic: DynamicNode as any
+  dynamic: markRaw(DynamicNode) as any
 }
 
 const isPanMode = ref(false)

@@ -110,9 +110,9 @@ const handleDelete = () => {
           <label class="field-label">{{ field.name }}</label>
           <component
             :is="getFieldComponent(field)"
-            :type="getFieldType(field)"
+            :type="field.type !== 'select' ? getFieldType(field) : undefined"
             :value="getFieldValue(field.key)"
-            :checked="getFieldValue(field.key)"
+            :checked="field.type === 'boolean' ? getFieldValue(field.key) : undefined"
             class="field-input"
             @change="onFieldChange(field.key, $event)"
             @input="onFieldChange(field.key, $event)"
