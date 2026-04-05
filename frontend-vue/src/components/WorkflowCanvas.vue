@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { ref } from 'vue'
 import { VueFlow, useVueFlow } from '@vue-flow/core'
 import { Background } from '@vue-flow/background'
 import { Controls } from '@vue-flow/controls'
@@ -6,6 +7,7 @@ import { MiniMap } from '@vue-flow/minimap'
 import type { Edge, Connection } from '@vue-flow/core'
 import DynamicNode from './nodes/DynamicNode.vue'
 import FloatingToolbar from './FloatingToolbar.vue'
+import CanvasModeToggle from './CanvasModeToggle.vue'
 import type { NodeData, Position as PosType, PluginDefinition, CategoryDefinition } from '../types/api'
 
 defineProps<{
@@ -32,6 +34,12 @@ const { project } = useVueFlow()
 
 const nodeTypes = {
   dynamic: DynamicNode as any
+}
+
+const isPanMode = ref(false)
+
+const onModeChange = (mode: 'select' | 'pan') => {
+  isPanMode.value = mode === 'pan'
 }
 
 const onNodeClick = (_event: any) => {
@@ -89,6 +97,8 @@ const onDrop = (event: DragEvent) => {
       :default-viewport="{ zoom: 1 }"
       :min-zoom="0.2"
       :max-zoom="2"
+      :pan-on-drag="isPanMode"
+      :selection-on-drag="!isPanMode"
       @node-click="onNodeClick"
       @pane-click="onPaneClick"
       @connect="onConnect"
@@ -96,13 +106,14 @@ const onDrop = (event: DragEvent) => {
     >
       <Background />
       <Controls />
-      <MiniMap v-if="showMinimap" />
+      <MiniMap v-if="showMinimap" pannable zoomable />
       <FloatingToolbar
         v-if="plugins && categories"
         :plugins="plugins"
         :categories="categories"
         class="floating-toolbar-in-canvas"
       />
+      <CanvasModeToggle @mode-change="onModeChange" />
     </VueFlow>
   </div>
 </template>
