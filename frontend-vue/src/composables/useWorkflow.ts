@@ -18,6 +18,7 @@ export interface UseWorkflowReturn {
   addNode: (plugin: PluginDefinition, position: Position) => void
   removeNode: (nodeId: string) => void
   updateNodeConfig: (nodeId: string, key: string, value: unknown) => void
+  updateNodePosition: (nodeId: string, position: Position) => void
   selectNode: (nodeId: string | null) => void
   addEdge: (source: string, target: string, sourceHandle?: string | null, targetHandle?: string | null) => void
   removeEdge: (edgeId: string) => void
@@ -67,6 +68,14 @@ export function useWorkflow(options: UseWorkflowOptions = {}): UseWorkflowReturn
       node.data.configValues[key] = value
       isDirty.value = true
       log(`Updated ${node.data.name}: ${key} = ${value}`, 'debug')
+    }
+  }
+
+  const updateNodePosition = (nodeId: string, position: Position) => {
+    const node = nodes.value.find(n => n.id === nodeId)
+    if (node) {
+      node.position = position
+      isDirty.value = true
     }
   }
 
@@ -171,6 +180,7 @@ export function useWorkflow(options: UseWorkflowOptions = {}): UseWorkflowReturn
     addNode,
     removeNode,
     updateNodeConfig,
+    updateNodePosition,
     selectNode,
     addEdge,
     removeEdge,
