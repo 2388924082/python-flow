@@ -222,47 +222,40 @@ const handleLoadData = async () => {
 
 onMounted(() => {
   handleLoadData()
+  initLogWebSocket()
 })
 
-let ws: WebSocket | null = null
+let logWs: WebSocket | null = null
 
-const connectWebSocket = (taskId: string) => {
-  if (ws) {
-    ws.close()
+const initLogWebSocket = () => {
+  if (logWs) {
+    logWs.close()
   }
-  const wsUrl = `ws://localhost:8000/ws/execute/${taskId}`
-  ws = new WebSocket(wsUrl)
+  const wsUrl = `ws://localhost:8000/ws/logs`
+  logWs = new WebSocket(wsUrl)
 
-  ws.onopen = () => {
-    addLog(`WebSocket connected: ${taskId}`, 'info')
+  logWs.onopen = () => {
+    addLog('Log stream connected', 'info')
   }
 
-  ws.onmessage = (event) => {
+  logWs.onmessage = (event) => {
     try {
       const data = JSON.parse(event.data)
       if (data.type === 'log') {
         addLog(data.message, data.level as any, 'BE')
-      } else if (data.type === 'status') {
-        if (data.status === 'completed') {
-          addLog(`Execution completed`, 'info')
-        } else if (data.status === 'failed') {
-          addLog(`Execution failed: ${data.error}`, 'error')
-        }
-        ws?.close()
-        ws = null
       }
     } catch (e) {
-      console.error('WebSocket message parse error:', e)
+      console.error('Log WebSocket message parse error:', e)
     }
   }
 
-  ws.onerror = (error) => {
-    addLog(`WebSocket error`, 'error')
-    console.error('WebSocket error:', error)
+  logWs.onerror = (error) => {
+    console.error('Log WebSocket error:', error)
   }
 
-  ws.onclose = () => {
-    ws = null
+  logWs.onclose = () => {
+    logWs = null
+    setTimeout(initLogWebSocket, 3000)
   }
 }
 
@@ -282,7 +275,7 @@ const handleExecute = async () => {
       version: '1.0',
       nodes: nodes.value.map(n => ({
         id: n.id,
-        type: n.type,
+        type: n.data.type || n.data.id || n.type,
         name: n.data.name,
         configValues: n.data.configValues,
         position: n.position
@@ -296,19 +289,16 @@ const handleExecute = async () => {
     const result = await executeWorkflow(workflowData as any)
     currentTaskId.value = result.taskId
     addLog(`Execution started: ${result.taskId}`, 'info')
-    connectWebSocket(result.taskId)
   } catch (e) {
     addLog(`Failed to execute: ${e instanceof Error ? e.message : 'Unknown error'}`, 'error')
   }
 }
 
 const handleStop = () => {
-  if (ws) {
-    ws.close()
-    ws = null
+  if (currentTaskId.value) {
+    addLog('Stopping execution...', 'warn')
   }
   currentTaskId.value = null
-  addLog('Execution stopped', 'warn')
 }
 </script>
 

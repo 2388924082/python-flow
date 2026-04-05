@@ -3,6 +3,8 @@ import sys
 
 
 def main(input_path: str, output_path: str):
+    import os
+    os.startfile("notepad.exe")
     with open(input_path, "r", encoding="utf-8") as f:
         input_data = json.load(f)
 

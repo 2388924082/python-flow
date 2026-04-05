@@ -20,9 +20,10 @@ class Executor:
     def __init__(self, executions_dir: str = "backend/executions"):
         self.executions_dir = executions_dir
 
-    def run(self, task_id: str, workflow: Workflow, ws_manager=None, main_loop=None) -> None:
+    def run(self, task_id: str, workflow: Workflow, ws_manager=None, main_loop=None, log_broadcast=None) -> None:
         self._ws_manager = ws_manager
         self._main_loop = main_loop
+        self._log_broadcast = log_broadcast
         thread = threading.Thread(target=self._run_async, args=(task_id, workflow))
         thread.daemon = True
         thread.start()
@@ -38,18 +39,32 @@ class Executor:
             except Exception as e:
                 logger.warning(f"Failed to broadcast: {e}")
 
+    def _broadcast_log(self, message: dict):
+        if self._log_broadcast is not None and self._main_loop is not None:
+            try:
+                if not self._main_loop.is_closed():
+                    asyncio.run_coroutine_threadsafe(
+                        self._log_broadcast(message),
+                        self._main_loop
+                    )
+            except Exception as e:
+                logger.warning(f"Failed to broadcast log: {e}")
+
     def _run_async(self, task_id: str, workflow: Workflow) -> None:
         task_dir = os.path.abspath(os.path.join(self.executions_dir, task_id))
         os.makedirs(task_dir, exist_ok=True)
 
         def add_log(level: str, message: str, node_id: str = None):
-            StateManager.add_log(task_id, level, message, node_id)
-            self._broadcast(task_id, {
+            log_entry = {
                 "type": "log",
                 "level": level,
                 "message": message,
-                "nodeId": node_id
-            })
+                "nodeId": node_id,
+                "taskId": task_id
+            }
+            StateManager.add_log(task_id, level, message, node_id)
+            self._broadcast(task_id, log_entry)
+            self._broadcast_log(log_entry)
 
         try:
             StateManager.update_status(task_id, "running")

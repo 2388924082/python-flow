@@ -31,6 +31,7 @@ app = FastAPI(title="AI Workflow Orchestrator")
 class ConnectionManager:
     def __init__(self):
         self.active_connections: Dict[str, Set[WebSocket]] = {}
+        self.log_subscribers: Set[WebSocket] = set()
 
     async def connect(self, task_id: str, websocket: WebSocket):
         await websocket.accept()
@@ -54,6 +55,23 @@ class ConnectionManager:
                     disconnected.add(connection)
             for conn in disconnected:
                 self.active_connections[task_id].discard(conn)
+
+    async def subscribe_logs(self, websocket: WebSocket):
+        await websocket.accept()
+        self.log_subscribers.add(websocket)
+
+    def unsubscribe_logs(self, websocket: WebSocket):
+        self.log_subscribers.discard(websocket)
+
+    async def broadcast_to_logs(self, message: dict):
+        disconnected = set()
+        for connection in self.log_subscribers:
+            try:
+                await connection.send_json(message)
+            except Exception:
+                disconnected.add(connection)
+        for conn in disconnected:
+            self.log_subscribers.discard(conn)
 
 
 manager = ConnectionManager()
@@ -177,11 +195,20 @@ async def execute(workflow: dict):
     StateManager.create(task_id, len(wf.nodes))
     await manager.broadcast(task_id, {"type": "log", "level": "INFO", "message": "Starting workflow execution", "nodeId": None})
     loop = asyncio.get_event_loop()
-    executor.run(task_id, wf, manager, loop)
+    executor.run(task_id, wf, manager, loop, manager.broadcast_to_logs)
 
     logger.info(f"Execution started: {task_id}")
     return {"taskId": task_id}
 
+
+@app.websocket("/ws/logs")
+async def websocket_logs(websocket: WebSocket):
+    await manager.subscribe_logs(websocket)
+    try:
+        while True:
+            data = await websocket.receive_text()
+    except WebSocketDisconnect:
+        manager.unsubscribe_logs(websocket)
 
 @app.websocket("/ws/execute/{task_id}")
 async def websocket_execute(websocket: WebSocket, task_id: str):
