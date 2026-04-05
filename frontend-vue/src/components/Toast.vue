@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import type { ToastType } from '../composables/useToast'
 
-const props = defineProps<{
+defineProps<{
   message: string
   type: ToastType
 }>()
 
-const emit = defineEmits<{
+defineEmits<{
   close: []
 }>()
 

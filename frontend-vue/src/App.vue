@@ -7,33 +7,23 @@ import WorkflowCanvas from './components/WorkflowCanvas.vue'
 import BottomPanel from './components/BottomPanel.vue'
 import SaveDialog from './components/SaveDialog.vue'
 import ToastContainer from './components/ToastContainer.vue'
-import type { PluginDefinition, CategoryDefinition, LogEntry, Position } from './types/api'
+import type { PluginDefinition, CategoryDefinition, Position } from './types/api'
+import type { NodeItem, EdgeItem } from './types/internal'
 import { getNodes, listWorkflows, getCategories, saveWorkflow, loadWorkflow as loadWorkflowApi, executeWorkflow, renameWorkflow, deleteWorkflow } from './services/api'
 import { useToast } from './composables/useToast'
+import { useLog } from './composables/useLog'
 
-interface NodeItem {
-  id: string
-  type: string
-  position: Position
-  data: any
-}
-
-interface EdgeItem {
-  id: string
-  source: string
-  target: string
-  sourceHandle?: string | null
-  targetHandle?: string | null
-}
+const { logs, addLog, clearLogs } = useLog()
+const toast = useToast()
+provide('toast', toast)
 
 const plugins = ref<PluginDefinition[]>([])
 const categories = ref<CategoryDefinition[]>([])
 const workflowList = ref<string[]>([])
-const currentWorkflow = ref<string | null>(null)
-const logs = ref<LogEntry[]>([])
 const nodes = ref<NodeItem[]>([])
 const edges = ref<EdgeItem[]>([])
 const selectedNodeId = ref<string | null>(null)
+const currentWorkflow = ref<string | null>(null)
 const showSaveDialog = ref(false)
 const currentTaskId = ref<string | null>(null)
 const fileListWidth = ref(200)
@@ -42,40 +32,6 @@ const bottomPanelHeight = ref(150)
 const bottomPanelCollapsed = ref(false)
 const isResizingH = ref(false)
 const isResizingV = ref(false)
-
-const logLevelMap: Record<string, 'log' | 'info' | 'warn' | 'error'> = {
-  debug: 'log',
-  info: 'info',
-  warn: 'warn',
-  error: 'error'
-}
-
-const addLog = (message: string, level: 'debug' | 'info' | 'warn' | 'error', source: 'FE' | 'BE' = 'FE') => {
-  const entry: LogEntry = {
-    id: `${Date.now()}_${Math.random().toString(36).slice(2, 11)}`,
-    timestamp: new Date().toLocaleTimeString('zh-CN', {
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit',
-      hour12: false
-    }),
-    source,
-    level,
-    message,
-    nodeId: null
-  }
-  logs.value.push(entry)
-
-  const consoleMethod = logLevelMap[level]
-  console[consoleMethod](`[${source}] ${message}`)
-}
-
-const toast = useToast()
-provide('toast', toast)
-
-const clearLogs = () => {
-  logs.value = []
-}
 
 const startResizeH = (_e: MouseEvent) => {
   isResizingH.value = true
