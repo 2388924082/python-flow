@@ -366,11 +366,8 @@ const handleStop = () => {
         @refresh="handleLoadData"
         @toggleCollapse="fileListCollapsed = !fileListCollapsed"
       />
-      <div
-        class="resize-handle-v"
-        :class="{ collapsed: fileListCollapsed }"
-        @mousedown.prevent="fileListCollapsed ? (fileListCollapsed = false) : startResizeH()"
-      ></div>
+      <div v-if="fileListCollapsed" class="expand-btn-v" @click="fileListCollapsed = false">▶</div>
+      <div v-else class="resize-handle-v" @mousedown="startResizeH"></div>
       <div class="canvas-area" :style="{ flex: 1 }">
         <FloatingToolbar :plugins="plugins" :categories="categories" />
         <WorkflowCanvas
@@ -384,14 +381,11 @@ const handleStop = () => {
           @update-node-config="handleUpdateNodeConfig"
           @connect="handleConnect"
         />
-        <div class="resize-handle-h" :class="{ collapsed: bottomPanelCollapsed }" @mousedown.prevent="bottomPanelCollapsed ? (bottomPanelCollapsed = false) : startResizeV()"></div>
-        <BottomPanel
-          v-if="!bottomPanelCollapsed"
-          :logs="logs"
-          :style="{ height: bottomPanelHeight + 'px' }"
-          @clear="clearLogs"
-          @toggleCollapse="bottomPanelCollapsed = true"
-        />
+        <div v-if="bottomPanelCollapsed" class="expand-btn-h" @click="bottomPanelCollapsed = false">▲</div>
+        <template v-else>
+          <div class="resize-handle-h" @mousedown="startResizeV"></div>
+          <BottomPanel :logs="logs" :style="{ height: bottomPanelHeight + 'px' }" @clear="clearLogs" @toggleCollapse="bottomPanelCollapsed = true" />
+        </template>
       </div>
     </div>
     <SaveDialog
@@ -430,35 +424,47 @@ const handleStop = () => {
   width: 4px;
   cursor: col-resize;
   background: var(--border-color);
-  transition: background 0.2s;
 }
 .resize-handle-v:hover {
   background: var(--accent-color);
 }
-.resize-handle-v.collapsed {
+
+.expand-btn-v {
   width: 12px;
   cursor: pointer;
   background: var(--bg-tertiary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  color: var(--text-secondary);
 }
-.resize-handle-v.collapsed:hover {
+.expand-btn-v:hover {
   background: var(--accent-color);
+  color: white;
 }
 
 .resize-handle-h {
   height: 4px;
   cursor: row-resize;
   background: var(--border-color);
-  transition: background 0.2s;
 }
 .resize-handle-h:hover {
   background: var(--accent-color);
 }
-.resize-handle-h.collapsed {
+
+.expand-btn-h {
   height: 12px;
   cursor: pointer;
   background: var(--bg-tertiary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  color: var(--text-secondary);
 }
-.resize-handle-h.collapsed:hover {
+.expand-btn-h:hover {
   background: var(--accent-color);
+  color: white;
 }
 </style>
