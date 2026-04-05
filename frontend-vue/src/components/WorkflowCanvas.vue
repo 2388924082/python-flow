@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { VueFlow, useVueFlow } from '@vue-flow/core'
 import { Background } from '@vue-flow/background'
 import { Controls } from '@vue-flow/controls'
@@ -8,9 +8,18 @@ import type { Edge, Connection } from '@vue-flow/core'
 import DynamicNode from './nodes/DynamicNode.vue'
 import FloatingToolbar from './FloatingToolbar.vue'
 import CanvasModeToggle from './CanvasModeToggle.vue'
+import ContextMenu from './ContextMenu.vue'
 import type { NodeData, Position as PosType, PluginDefinition, CategoryDefinition } from '../types/api'
 
-defineProps<{
+interface MenuItem {
+  label: string
+  icon?: string
+  action?: () => void
+  danger?: boolean
+  children?: MenuItem[]
+}
+
+const props = defineProps<{
   nodes?: any[]
   edges?: Edge[]
   selectedNodeId?: string | null
@@ -40,6 +49,110 @@ const isPanMode = ref(false)
 
 const onModeChange = (mode: 'select' | 'pan') => {
   isPanMode.value = mode === 'pan'
+}
+
+const contextMenu = ref<{
+  visible: boolean
+  x: number
+  y: number
+  items: MenuItem[]
+}>({
+  visible: false,
+  x: 0,
+  y: 0,
+  items: []
+})
+
+const getPluginsByCategory = (categoryId: string) => {
+  if (!props.plugins) return []
+  return props.plugins.filter(p => p.category === categoryId)
+}
+
+const sortedCategories = computed(() => {
+  if (!props.categories) return []
+  return [...props.categories].sort((a, b) => a.order - b.order)
+})
+
+const onPaneContextMenu = (event: MouseEvent) => {
+  event.preventDefault()
+
+  const pluginItems: MenuItem[] = sortedCategories.value.map(cat => ({
+    label: cat.name,
+    icon: cat.icon,
+    children: getPluginsByCategory(cat.id).map(p => ({
+      label: p.name,
+      icon: p.icon,
+      action: () => {
+        const vueFlowPane = document.querySelector('.vue-flow__pane')
+        if (vueFlowPane) {
+          const bounds = vueFlowPane.getBoundingClientRect()
+          const position = project({
+            x: event.clientX - bounds.left,
+            y: event.clientY - bounds.top
+          })
+          emit('add-node', { id: p.id } as NodeData, position)
+        }
+      }
+    }))
+  }))
+
+  contextMenu.value = {
+    visible: true,
+    x: event.clientX,
+    y: event.clientY,
+    items: [
+      {
+        label: '新建节点',
+        icon: '🆕',
+        children: pluginItems
+      },
+      {
+        label: '粘贴',
+        icon: '📋',
+        action: () => {
+          console.log('[WorkflowCanvas] paste')
+        }
+      }
+    ]
+  }
+}
+
+const onNodeContextMenu = (event: any) => {
+  event.event.preventDefault()
+
+  contextMenu.value = {
+    visible: true,
+    x: event.event.clientX,
+    y: event.event.clientY,
+    items: [
+      {
+        label: '删除',
+        icon: '🗑️',
+        danger: true,
+        action: () => {
+          emit('delete-node', event.node.id)
+        }
+      },
+      {
+        label: '复制',
+        icon: '📋',
+        action: () => {
+          console.log('[WorkflowCanvas] copy node:', event.node.id)
+        }
+      }
+    ]
+  }
+}
+
+const closeContextMenu = () => {
+  contextMenu.value.visible = false
+}
+
+const handleMenuItemClick = (item: MenuItem) => {
+  if (item.action) {
+    item.action()
+  }
+  closeContextMenu()
 }
 
 const onNodeClick = (_event: any) => {
@@ -101,6 +214,8 @@ const onDrop = (event: DragEvent) => {
       :selection-on-drag="!isPanMode"
       @node-click="onNodeClick"
       @pane-click="onPaneClick"
+      @pane-context-menu="onPaneContextMenu"
+      @node-context-menu="onNodeContextMenu"
       @connect="onConnect"
       @node-drag-stop="onNodeDragStop"
     >
@@ -115,6 +230,14 @@ const onDrop = (event: DragEvent) => {
       />
       <CanvasModeToggle @mode-change="onModeChange" />
     </VueFlow>
+    <ContextMenu
+      v-if="contextMenu.visible"
+      :items="contextMenu.items"
+      mode="scroll"
+      :style="{ left: contextMenu.x + 'px', top: contextMenu.y + 'px', position: 'fixed' }"
+      @close="closeContextMenu"
+      @item-click="handleMenuItemClick"
+    />
   </div>
 </template>
 
