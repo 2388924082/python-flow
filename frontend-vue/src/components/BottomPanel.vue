@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, inject } from 'vue'
+import { ref, inject, watch, nextTick } from 'vue'
 
 const levels = ['debug', 'info', 'warn', 'error']
 
@@ -12,7 +12,7 @@ interface LogEntry {
   nodeId: string | null
 }
 
-defineProps<{
+const props = defineProps<{
   logs: LogEntry[]
 }>()
 
@@ -27,6 +27,17 @@ type TabType = 'logs' | 'terminal'
 const activeTab = ref<TabType>('logs')
 const filterLevel = ref<string | null>(null)
 const filterSource = ref<'BE' | 'FE' | 'ALL'>('ALL')
+const autoScroll = ref(true)
+const logListRef = ref<HTMLElement | null>(null)
+
+watch(() => props.logs.length, async () => {
+  if (autoScroll.value) {
+    await nextTick()
+    if (logListRef.value) {
+      logListRef.value.scrollTop = logListRef.value.scrollHeight
+    }
+  }
+})
 
 const filteredLogs = (logs: LogEntry[]) => {
   let result = logs
@@ -77,6 +88,10 @@ const copyLogs = async (logs: LogEntry[]) => {
       </div>
       <div class="panel-spacer"></div>
       <div class="panel-actions" v-if="activeTab === 'logs'">
+        <label class="auto-scroll-label">
+          <input type="checkbox" v-model="autoScroll" />
+          自动滚动
+        </label>
         <select v-model="filterLevel" class="filter-select">
           <option :value="null">全部</option>
           <option v-for="level in levels" :key="level" :value="level">
@@ -88,7 +103,7 @@ const copyLogs = async (logs: LogEntry[]) => {
       </div>
       <button class="collapse-btn" @click="emit('toggleCollapse')">▼</button>
     </div>
-    <div class="log-list" v-if="activeTab === 'logs'">
+    <div class="log-list" v-if="activeTab === 'logs'" ref="logListRef">
       <div
         v-for="log in filteredLogs(logs)"
         :key="log.id"
@@ -171,6 +186,19 @@ const copyLogs = async (logs: LogEntry[]) => {
   display: flex;
   align-items: center;
   gap: var(--spacing-sm);
+}
+
+.auto-scroll-label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+.auto-scroll-label input {
+  cursor: pointer;
 }
 
 .filter-select {

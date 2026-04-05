@@ -33,9 +33,11 @@ export function useLog(): UseLogReturn {
     }
     logs.value.push(entry)
 
-    const consoleMethod = logLevelMap[level.toLowerCase() as keyof typeof logLevelMap]
-    if (consoleMethod) {
-      console[consoleMethod](`[${source}] ${message}`)
+    if (source !== 'BE') {
+      const consoleMethod = logLevelMap[level.toLowerCase() as keyof typeof logLevelMap]
+      if (consoleMethod) {
+        console[consoleMethod](`[${source}] ${message}`)
+      }
     }
   }
 
