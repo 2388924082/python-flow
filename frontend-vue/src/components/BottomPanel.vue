@@ -60,12 +60,7 @@ const getLevelIcon = (level: string) => {
         :key="log.id"
         class="log-entry"
         :class="getLevelClass(log.level)"
-      >
-        <span class="log-time">{{ log.timestamp }}</span>
-        <span class="log-source">{{ log.source }}</span>
-        <span class="log-icon">{{ getLevelIcon(log.level) }}</span>
-        <span class="log-message">{{ log.message }}</span>
-      </div>
+      >{{ log.timestamp }} {{ log.source }} {{ getLevelIcon(log.level) }} {{ log.message }}</div>
       <div v-if="logs.length === 0" class="empty-logs">
         暂无日志
       </div>
@@ -126,37 +121,17 @@ const getLevelIcon = (level: string) => {
 }
 
 .log-entry {
-  display: flex;
-  align-items: flex-start;
-  gap: var(--spacing-sm);
   padding: var(--spacing-xs) var(--spacing-sm);
   border-radius: var(--radius-sm);
   font-size: 12px;
   font-family: var(--font-mono);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .log-entry:hover {
   background: var(--bg-tertiary);
-}
-
-.log-time {
-  color: var(--text-secondary);
-  flex-shrink: 0;
-}
-
-.log-source {
-  color: var(--accent-color);
-  flex-shrink: 0;
-  font-size: 10px;
-}
-
-.log-icon {
-  flex-shrink: 0;
-}
-
-.log-message {
-  flex: 1;
-  word-break: break-all;
 }
 
 .log-debug .log-icon { opacity: 0.5; }

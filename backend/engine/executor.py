@@ -74,14 +74,16 @@ class Executor:
             execution_order = graph.topological_sort()
 
             StateManager.update_progress(task_id, 0, len(execution_order))
-            add_log("INFO", f"Execution order: {' -> '.join(execution_order)}")
+            node_names = {nid: graph.nodes[nid].name for nid in execution_order}
+            add_log("INFO", f"Execution order: {' -> '.join(node_names.values())}")
 
             context: dict[str, dict[str, Any]] = {}
             executed: set[str] = set()
 
             for idx, node_id in enumerate(execution_order):
+                node_name = node_names[node_id]
                 StateManager.update_progress(task_id, idx + 1, len(execution_order), node_id)
-                add_log("INFO", f"Executing node: {node_id}", node_id)
+                add_log("INFO", f"Executing node: {node_name}", node_id)
 
                 try:
                     node_data = graph.nodes[node_id]
@@ -110,13 +112,13 @@ class Executor:
                     for log_line in result.get("logs", []):
                         add_log("INFO", log_line, node_id)
 
-                    add_log("INFO", f"Node {node_id} completed", node_id)
+                    add_log("INFO", f"Node {node_name} completed", node_id)
                     executed.add(node_id)
 
                 except Exception as e:
-                    logger.error(f"Node {node_id} failed: {e}")
+                    logger.error(f"Node {node_name} ({node_id}) failed: {e}")
                     StateManager.set_error(task_id, str(e), node_id)
-                    add_log("ERROR", f"Node {node_id} failed: {e}", node_id)
+                    add_log("ERROR", f"Node {node_name} failed: {e}", node_id)
                     self._cleanup(task_dir)
                     self._broadcast(task_id, {
                         "type": "status",
