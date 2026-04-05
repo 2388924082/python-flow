@@ -300,6 +300,7 @@ WebSocket /ws/logs
 | FloatingToolbar | 缩放控制、适应屏幕 |
 | BottomPanel | 详细日志显示，支持过滤、自动滚动 |
 | ToastContainer | Toast 通知显示 |
+| SaveDialog | 保存工作流对话框 |
 
 ### 日志面板功能
 

@@ -275,9 +275,12 @@ app.add_middleware(
 | GET | `/api/workflows/{name}` | 加载工作流 |
 | POST | `/api/workflows/{name}` | 保存工作流 |
 | DELETE | `/api/workflows/{name}` | 删除工作流 |
-| POST | `/api/workflows/{old}/rename` | 重命名工作流 |
+| POST | `/api/workflows/rename` | 重命名工作流（body: `{oldName, newName}`） |
 | POST | `/api/execute` | 执行工作流 |
-| WS | `/ws/logs` | WebSocket 日志通道 |
+| GET | `/api/execute/{task_id}` | 查询执行状态 |
+| DELETE | `/api/execute/{task_id}` | 停止执行 |
+| WS | `/ws/logs` | WebSocket 日志通道（订阅所有日志） |
+| WS | `/ws/execute/{task_id}` | WebSocket 执行通道（订阅特定任务） |
 
 **响应格式规范**：
 - API 响应字段使用 **驼峰命名**（camelCase），如 `taskId`、`currentNode`、`failedNode`

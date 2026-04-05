@@ -226,6 +226,7 @@ class ExecutionState:
 | aggregator | 数据聚合 | operation (sum/avg/count) |
 | csv_converter | CSV 转换 | format (csv/json) |
 | json_parser | JSON 解析 | path (JSONPath) |
+| data_logger | 数据日志 | message (日志消息) |
 
 ### 调试节点 (debug)
 

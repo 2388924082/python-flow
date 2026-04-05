@@ -255,21 +255,16 @@
 }
 ```
 
-### POST /api/workflows/{old_name}/rename
+### POST /api/workflows/rename
 
 重命名工作流。
-
-**参数**
-
-| 参数 | 类型 | 说明 |
-|------|------|------|
-| old_name | string | 原名称（URL 编码） |
 
 **请求体**
 
 ```json
 {
-  "new_name": "新名称"
+  "oldName": "原名称",
+  "newName": "新名称"
 }
 ```
 
@@ -277,8 +272,9 @@
 
 ```json
 {
-  "message": "重命名成功",
-  "file": "新名称.workflow"
+  "message": "Workflow renamed",
+  "oldName": "原名称",
+  "newName": "新名称"
 }
 ```
 
@@ -291,7 +287,6 @@
 启动工作流执行。
 
 **请求体**
-
 ```json
 {
   "workflow": {
@@ -354,6 +349,36 @@
 }
 ```
 
+### GET /api/execute/{task_id}
+
+查询执行状态。
+
+**响应**
+
+```json
+{
+  "task_id": "abc123",
+  "status": "running",
+  "progress": {
+    "current": 2,
+    "total": 5,
+    "current_node": "filter"
+  }
+}
+```
+
+### DELETE /api/execute/{task_id}
+
+停止执行中的工作流。
+
+**响应**
+
+```json
+{
+  "message": "Execution cancelled"
+}
+```
+
 ---
 
 ## 5. WebSocket 日志
@@ -389,6 +414,36 @@ const ws = new WebSocket('ws://localhost:8000/ws/logs')
 | level | string | 级别：`DEBUG` / `INFO` / `WARN` / `ERROR` |
 | message | string | 日志内容 |
 | nodeId | string/null | 关联节点 ID |
+
+### WS /ws/execute/{task_id}
+
+执行进度 WebSocket 通道，订阅特定任务的执行进度。
+
+**连接**
+
+```javascript
+const ws = new WebSocket('ws://localhost:8000/ws/execute/{task_id}')
+```
+
+**服务器推送消息**
+
+```json
+{
+  "type": "progress",
+  "current_node": "数据输入",
+  "completed_nodes": ["数据输入"],
+  "total_nodes": 3
+}
+```
+
+**消息类型**
+
+| type | 说明 |
+|------|------|
+| progress | 执行进度更新 |
+| log | 日志消息 |
+| result | 执行结果 |
+| error | 执行错误 |
 
 ---
 
