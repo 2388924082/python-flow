@@ -54,6 +54,7 @@ const defaultEdgeOptions = {
 }
 
 const isPanMode = ref(false)
+const selectedEdgeId = ref<string | null>(null)
 
 const onModeChange = (mode: 'select' | 'pan') => {
   isPanMode.value = mode === 'pan'
@@ -152,6 +153,28 @@ const onNodeContextMenu = (event: any) => {
   }
 }
 
+const onEdgeContextMenu = (event: any) => {
+  event.event.preventDefault()
+  selectedEdgeId.value = event.edge.id
+
+  contextMenu.value = {
+    visible: true,
+    x: event.event.clientX,
+    y: event.event.clientY,
+    items: [
+      {
+        label: '删除',
+        icon: '🗑️',
+        danger: true,
+        action: () => {
+          emit('delete-edge', event.edge.id)
+          selectedEdgeId.value = null
+        }
+      }
+    ]
+  }
+}
+
 const closeContextMenu = () => {
   contextMenu.value.visible = false
 }
@@ -225,6 +248,7 @@ const onDrop = (event: DragEvent) => {
       @pane-click="onPaneClick"
       @pane-context-menu="onPaneContextMenu"
       @node-context-menu="onNodeContextMenu"
+      @edge-context-menu="onEdgeContextMenu"
       @connect="onConnect"
       @node-drag-stop="onNodeDragStop"
     >

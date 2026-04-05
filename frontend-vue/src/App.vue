@@ -30,6 +30,7 @@ const {
   selectNode,
   addEdge,
   removeNode: deleteNode,
+  removeEdge,
   newWorkflow,
   save,
   load,
@@ -110,6 +111,10 @@ const handleConnect = (connection: { source: string; target: string }) => {
 
 const handleDeleteNode = (nodeId: string) => {
   deleteNode(nodeId)
+}
+
+const handleDeleteEdge = (edgeId: string) => {
+  removeEdge(edgeId)
 }
 
 const handleSave = async () => {
@@ -308,6 +313,7 @@ const handleToggleMinimap = () => {
           @add-node="handleAddNode"
           @select-node="selectNode"
           @delete-node="handleDeleteNode"
+          @delete-edge="handleDeleteEdge"
           @update-node-config="handleUpdateNodeConfig"
           @connect="handleConnect"
           @position-change="handlePositionChange"
