@@ -36,7 +36,7 @@ const emit = defineEmits<{
   'delete-node': [nodeId: string]
   'delete-edge': [edgeId: string]
   'update-node-config': [nodeId: string, key: string, value: unknown]
-  'connect': [connection: { source: string; target: string }]
+  'connect': [connection: { source: string; target: string; sourceHandle?: string | null; targetHandle?: string | null }]
 }>()
 
 const { project } = useVueFlow()
@@ -196,7 +196,12 @@ const onPaneClick = () => {
 
 const onConnect = (connection: Connection) => {
   if (connection.source && connection.target) {
-    emit('connect', { source: connection.source, target: connection.target })
+    emit('connect', {
+      source: connection.source,
+      target: connection.target,
+      sourceHandle: connection.sourceHandle,
+      targetHandle: connection.targetHandle
+    })
   }
 }
 

@@ -105,8 +105,8 @@ const handlePositionChange = (nodeId: string, position: { x: number; y: number }
   updateNodePosition(nodeId, position)
 }
 
-const handleConnect = (connection: { source: string; target: string }) => {
-  addEdge(connection.source, connection.target)
+const handleConnect = (connection: { source: string; target: string; sourceHandle?: string | null; targetHandle?: string | null }) => {
+  addEdge(connection.source, connection.target, connection.sourceHandle, connection.targetHandle)
 }
 
 const handleDeleteNode = (nodeId: string) => {
