@@ -1,4 +1,4 @@
-import { ref, watch } from 'vue'
+import { ref } from 'vue'
 
 export type ThemeName = 'vscode-dark' | 'light' | 'dark'
 

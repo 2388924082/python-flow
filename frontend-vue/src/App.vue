@@ -92,7 +92,7 @@ const handleAddNode = (data: { id: string }, position: Position) => {
       }, {})
     }
   }
-  nodes.value.push(newNode)
+  nodes.value = [...nodes.value, newNode]
   addLog(`Added node: ${plugin.name}`, 'info')
 }
 
