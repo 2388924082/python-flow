@@ -14,6 +14,7 @@ defineProps<{
   selectedNodeId?: string | null
   plugins?: PluginDefinition[]
   categories?: CategoryDefinition[]
+  showMinimap?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -95,7 +96,7 @@ const onDrop = (event: DragEvent) => {
     >
       <Background />
       <Controls />
-      <MiniMap />
+      <MiniMap v-if="showMinimap" />
       <FloatingToolbar
         v-if="plugins && categories"
         :plugins="plugins"

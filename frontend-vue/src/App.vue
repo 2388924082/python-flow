@@ -31,6 +31,7 @@ const fileListWidth = ref(200)
 const fileListCollapsed = ref(false)
 const bottomPanelHeight = ref(150)
 const bottomPanelCollapsed = ref(false)
+const showMinimap = ref(true)
 const isResizingH = ref(false)
 const isResizingV = ref(false)
 
@@ -345,6 +346,10 @@ const handleStop = () => {
   }
   currentTaskId.value = null
 }
+
+const handleToggleMinimap = () => {
+  showMinimap.value = !showMinimap.value
+}
 </script>
 
 <template>
@@ -359,6 +364,9 @@ const handleStop = () => {
       @new="handleNew"
     />
     <ThemeSwitcher class="theme-switcher" />
+    <div class="minimap-toggle" :class="{ active: showMinimap }" @click="handleToggleMinimap" title="切换导航图">
+      🗺️
+    </div>
     <div class="main-content">
       <FileList
         :workflowList="workflowList"
@@ -380,6 +388,7 @@ const handleStop = () => {
           :selectedNodeId="selectedNodeId"
           :plugins="plugins"
           :categories="categories"
+          :showMinimap="showMinimap"
           :style="{ flex: 1 }"
           @add-node="handleAddNode"
           @select-node="handleSelectNode"
@@ -480,5 +489,29 @@ const handleStop = () => {
   top: 60px;
   right: 16px;
   z-index: 100;
+}
+
+.minimap-toggle {
+  position: fixed;
+  top: 100px;
+  right: 16px;
+  z-index: 100;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  cursor: pointer;
+  opacity: 0.6;
+  transition: opacity var(--transition-fast);
+}
+
+.minimap-toggle:hover {
+  opacity: 1;
+}
+
+.minimap-toggle.active {
+  opacity: 1;
 }
 </style>
