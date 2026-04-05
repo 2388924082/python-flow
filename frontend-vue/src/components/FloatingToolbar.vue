@@ -76,14 +76,9 @@ const getPluginsByCategory = (categoryId: string) => {
 
 <style scoped>
 .floating-toolbar {
-  position: absolute;
-  left: 20px;
-  top: 50%;
-  transform: translateY(-50%);
   display: flex;
   flex-direction: column;
   gap: var(--spacing-xs);
-  z-index: 10;
   padding: var(--spacing-xs);
   background: var(--bg-secondary);
   border-radius: var(--radius-lg);

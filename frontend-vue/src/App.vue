@@ -7,6 +7,7 @@ import WorkflowCanvas from './components/WorkflowCanvas.vue'
 import BottomPanel from './components/BottomPanel.vue'
 import SaveDialog from './components/SaveDialog.vue'
 import ToastContainer from './components/ToastContainer.vue'
+import ThemeSwitcher from './components/ThemeSwitcher.vue'
 import type { PluginDefinition, CategoryDefinition, Position } from './types/api'
 import type { NodeItem, EdgeItem } from './types/internal'
 import { getNodes, listWorkflows, getCategories, saveWorkflow, loadWorkflow as loadWorkflowApi, executeWorkflow, renameWorkflow, deleteWorkflow } from './services/api'
@@ -59,7 +60,8 @@ const handleResizeV = (e: MouseEvent) => {
     const container = document.querySelector('.canvas-area') as HTMLElement
     if (container) {
       const rect = container.getBoundingClientRect()
-      bottomPanelHeight.value = Math.max(80, Math.min(400, rect.bottom - e.clientY))
+      const newHeight = Math.max(80, Math.min(400, rect.bottom - e.clientY))
+      bottomPanelHeight.value = newHeight
     }
   }
 }
@@ -356,6 +358,7 @@ const handleStop = () => {
       @stop="handleStop"
       @new="handleNew"
     />
+    <ThemeSwitcher class="theme-switcher" />
     <div class="main-content">
       <FileList
         :workflowList="workflowList"
@@ -371,11 +374,12 @@ const handleStop = () => {
       <div v-if="fileListCollapsed" class="expand-btn-v" @click="fileListCollapsed = false">▶</div>
       <div v-else class="resize-handle-v" @mousedown="startResizeH"></div>
       <div class="canvas-area" :style="{ flex: 1 }">
-        <FloatingToolbar :plugins="plugins" :categories="categories" />
         <WorkflowCanvas
           :nodes="nodes"
           :edges="edges"
           :selectedNodeId="selectedNodeId"
+          :plugins="plugins"
+          :categories="categories"
           :style="{ flex: 1 }"
           @add-node="handleAddNode"
           @select-node="handleSelectNode"
@@ -469,5 +473,12 @@ const handleStop = () => {
 .expand-btn-h:hover {
   background: var(--accent-color);
   color: white;
+}
+
+.theme-switcher {
+  position: fixed;
+  top: 60px;
+  right: 16px;
+  z-index: 100;
 }
 </style>

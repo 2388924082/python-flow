@@ -5,12 +5,15 @@ import { Controls } from '@vue-flow/controls'
 import { MiniMap } from '@vue-flow/minimap'
 import type { Edge, Connection } from '@vue-flow/core'
 import DynamicNode from './nodes/DynamicNode.vue'
-import type { NodeData, Position as PosType } from '../types/api'
+import FloatingToolbar from './FloatingToolbar.vue'
+import type { NodeData, Position as PosType, PluginDefinition, CategoryDefinition } from '../types/api'
 
 defineProps<{
   nodes?: any[]
   edges?: Edge[]
   selectedNodeId?: string | null
+  plugins?: PluginDefinition[]
+  categories?: CategoryDefinition[]
 }>()
 
 const emit = defineEmits<{
@@ -93,6 +96,12 @@ const onDrop = (event: DragEvent) => {
       <Background />
       <Controls />
       <MiniMap />
+      <FloatingToolbar
+        v-if="plugins && categories"
+        :plugins="plugins"
+        :categories="categories"
+        class="floating-toolbar-in-canvas"
+      />
     </VueFlow>
   </div>
 </template>
@@ -102,6 +111,7 @@ const onDrop = (event: DragEvent) => {
   flex: 1;
   height: 100%;
   background: var(--bg-primary);
+  position: relative;
 }
 
 .vue-flow {
@@ -109,5 +119,13 @@ const onDrop = (event: DragEvent) => {
   --vf-node-text: var(--text-primary);
   --vf-connection-path: var(--accent-color);
   --vf-handle: var(--accent-color);
+}
+
+.floating-toolbar-in-canvas {
+  position: absolute;
+  left: 20px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 10;
 }
 </style>
