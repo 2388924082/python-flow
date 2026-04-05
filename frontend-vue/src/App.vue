@@ -32,6 +32,12 @@ const edges = ref<EdgeItem[]>([])
 const selectedNodeId = ref<string | null>(null)
 const showSaveDialog = ref(false)
 const currentTaskId = ref<string | null>(null)
+const fileListWidth = ref(200)
+const fileListCollapsed = ref(false)
+const bottomPanelHeight = ref(150)
+const bottomPanelCollapsed = ref(false)
+const isResizingH = ref(false)
+const isResizingV = ref(false)
 
 const addLog = (message: string, level: 'debug' | 'info' | 'warn' | 'error', source: 'FE' | 'BE' = 'FE') => {
   const entry: LogEntry = {
@@ -52,6 +58,42 @@ const addLog = (message: string, level: 'debug' | 'info' | 'warn' | 'error', sou
 
 const clearLogs = () => {
   logs.value = []
+}
+
+const startResizeH = (e: MouseEvent) => {
+  isResizingH.value = true
+  document.addEventListener('mousemove', handleResizeH)
+  document.addEventListener('mouseup', stopResizeH)
+}
+const handleResizeH = (e: MouseEvent) => {
+  if (isResizingH.value) {
+    fileListWidth.value = Math.max(120, Math.min(400, e.clientX))
+  }
+}
+const stopResizeH = () => {
+  isResizingH.value = false
+  document.removeEventListener('mousemove', handleResizeH)
+  document.removeEventListener('mouseup', stopResizeH)
+}
+
+const startResizeV = (e: MouseEvent) => {
+  isResizingV.value = true
+  document.addEventListener('mousemove', handleResizeV)
+  document.addEventListener('mouseup', stopResizeV)
+}
+const handleResizeV = (e: MouseEvent) => {
+  if (isResizingV.value) {
+    const container = document.querySelector('.canvas-area') as HTMLElement
+    if (container) {
+      const rect = container.getBoundingClientRect()
+      bottomPanelHeight.value = Math.max(80, Math.min(400, rect.bottom - e.clientY))
+    }
+  }
+}
+const stopResizeV = () => {
+  isResizingV.value = false
+  document.removeEventListener('mousemove', handleResizeV)
+  document.removeEventListener('mouseup', stopResizeV)
 }
 
 const handleAddNode = (data: { id: string }, position: Position) => {
@@ -312,27 +354,44 @@ const handleStop = () => {
       @execute="handleExecute"
       @stop="handleStop"
       @new="handleNew"
+      @toggleFileList="fileListCollapsed = !fileListCollapsed"
     />
     <div class="main-content">
       <FileList
         :workflowList="workflowList"
         :activeWorkflow="currentWorkflow"
+        :isCollapsed="fileListCollapsed"
+        :style="{ width: fileListCollapsed ? '0' : fileListWidth + 'px' }"
         @select="handleLoad"
         @refresh="handleLoadData"
+        @toggleCollapse="fileListCollapsed = !fileListCollapsed"
       />
-      <div class="canvas-area">
+      <div
+        class="resize-handle-v"
+        :class="{ collapsed: fileListCollapsed }"
+        @mousedown.prevent="fileListCollapsed ? (fileListCollapsed = false) : startResizeH()"
+      ></div>
+      <div class="canvas-area" :style="{ flex: 1 }">
         <FloatingToolbar :plugins="plugins" :categories="categories" />
         <WorkflowCanvas
           :nodes="nodes"
           :edges="edges"
           :selectedNodeId="selectedNodeId"
+          :style="{ flex: 1 }"
           @add-node="handleAddNode"
           @select-node="handleSelectNode"
           @delete-node="handleDeleteNode"
           @update-node-config="handleUpdateNodeConfig"
           @connect="handleConnect"
         />
-        <BottomPanel :logs="logs" @clear="clearLogs" />
+        <div class="resize-handle-h" :class="{ collapsed: bottomPanelCollapsed }" @mousedown.prevent="bottomPanelCollapsed ? (bottomPanelCollapsed = false) : startResizeV()"></div>
+        <BottomPanel
+          v-if="!bottomPanelCollapsed"
+          :logs="logs"
+          :style="{ height: bottomPanelHeight + 'px' }"
+          @clear="clearLogs"
+          @toggleCollapse="bottomPanelCollapsed = true"
+        />
       </div>
     </div>
     <SaveDialog
@@ -365,5 +424,41 @@ const handleStop = () => {
   flex-direction: column;
   position: relative;
   overflow: hidden;
+}
+
+.resize-handle-v {
+  width: 4px;
+  cursor: col-resize;
+  background: var(--border-color);
+  transition: background 0.2s;
+}
+.resize-handle-v:hover {
+  background: var(--accent-color);
+}
+.resize-handle-v.collapsed {
+  width: 12px;
+  cursor: pointer;
+  background: var(--bg-tertiary);
+}
+.resize-handle-v.collapsed:hover {
+  background: var(--accent-color);
+}
+
+.resize-handle-h {
+  height: 4px;
+  cursor: row-resize;
+  background: var(--border-color);
+  transition: background 0.2s;
+}
+.resize-handle-h:hover {
+  background: var(--accent-color);
+}
+.resize-handle-h.collapsed {
+  height: 12px;
+  cursor: pointer;
+  background: var(--bg-tertiary);
+}
+.resize-handle-h.collapsed:hover {
+  background: var(--accent-color);
 }
 </style>

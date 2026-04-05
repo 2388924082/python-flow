@@ -18,6 +18,7 @@ defineProps<{
 
 const emit = defineEmits<{
   clear: []
+  toggleCollapse: []
 }>()
 
 const filterLevel = ref<string | null>(null)
@@ -52,6 +53,7 @@ const getLevelIcon = (level: string) => {
           </option>
         </select>
         <button class="btn-clear" @click="emit('clear')">清空</button>
+        <button class="collapse-btn" @click="emit('toggleCollapse')">▼</button>
       </div>
     </div>
     <div class="log-list">
@@ -70,7 +72,6 @@ const getLevelIcon = (level: string) => {
 
 <style scoped>
 .bottom-panel {
-  height: 150px;
   display: flex;
   flex-direction: column;
   background: var(--bg-secondary);
@@ -80,15 +81,25 @@ const getLevelIcon = (level: string) => {
 .panel-header {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  gap: var(--spacing-xs);
   padding: var(--spacing-xs) var(--spacing-md);
   border-bottom: 1px solid var(--border-color);
 }
 
 .panel-title {
   font-weight: 500;
-  font-size: 13px;
+  flex: 1;
+}
+
+.collapse-btn {
+  padding: 2px 6px;
+  font-size: 10px;
   color: var(--text-secondary);
+  border-radius: var(--radius-sm);
+  transition: background var(--transition-fast);
+}
+.collapse-btn:hover {
+  background: var(--bg-tertiary);
 }
 
 .panel-actions {

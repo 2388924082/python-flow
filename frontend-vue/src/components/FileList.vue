@@ -1,28 +1,26 @@
 <script setup lang="ts">
-import { ref } from 'vue'
-
 defineProps<{
   workflowList: string[]
   activeWorkflow: string | null
+  isCollapsed: boolean
 }>()
 
 const emit = defineEmits<{
   select: [name: string]
   refresh: []
+  toggleCollapse: []
 }>()
-
-const isCollapsed = ref(false)
 </script>
 
 <template>
-  <div class="file-list" :class="{ collapsed: isCollapsed }">
+  <div class="file-list" v-show="!isCollapsed">
     <div class="file-list-header">
-      <span v-if="!isCollapsed">文件列表</span>
-      <button class="collapse-btn" @click="isCollapsed = !isCollapsed">
-        {{ isCollapsed ? '▶' : '◀' }}
+      <span>文件列表</span>
+      <button class="collapse-btn" @click="emit('toggleCollapse')">
+        ◀
       </button>
     </div>
-    <div class="file-list-content" v-if="!isCollapsed">
+    <div class="file-list-content">
       <div
         v-for="name in workflowList"
         :key="name"
@@ -41,16 +39,10 @@ const isCollapsed = ref(false)
 
 <style scoped>
 .file-list {
-  width: 200px;
   display: flex;
   flex-direction: column;
   background: var(--bg-secondary);
   border-right: 1px solid var(--border-color);
-  transition: width var(--transition-normal);
-}
-
-.file-list.collapsed {
-  width: 40px;
 }
 
 .file-list-header {
@@ -62,11 +54,6 @@ const isCollapsed = ref(false)
   font-weight: 500;
   font-size: 13px;
   color: var(--text-secondary);
-}
-
-.collapsed .file-list-header {
-  justify-content: center;
-  padding: var(--spacing-sm);
 }
 
 .collapse-btn {
