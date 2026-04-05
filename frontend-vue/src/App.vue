@@ -8,7 +8,7 @@ import BottomPanel from './components/BottomPanel.vue'
 import SaveDialog from './components/SaveDialog.vue'
 import ToastContainer from './components/ToastContainer.vue'
 import type { PluginDefinition, CategoryDefinition, LogEntry, Position } from './types/api'
-import { getNodes, listWorkflows, getCategories, saveWorkflow, loadWorkflow as loadWorkflowApi, executeWorkflow, getExecutionStatus, stopExecution, renameWorkflow, deleteWorkflow } from './services/api'
+import { getNodes, listWorkflows, getCategories, saveWorkflow, loadWorkflow as loadWorkflowApi, executeWorkflow, renameWorkflow, deleteWorkflow } from './services/api'
 import { useToast } from './composables/useToast'
 
 interface NodeItem {
@@ -22,6 +22,8 @@ interface EdgeItem {
   id: string
   source: string
   target: string
+  sourceHandle?: string | null
+  targetHandle?: string | null
 }
 
 const plugins = ref<PluginDefinition[]>([])
@@ -41,6 +43,13 @@ const bottomPanelCollapsed = ref(false)
 const isResizingH = ref(false)
 const isResizingV = ref(false)
 
+const logLevelMap: Record<string, 'log' | 'info' | 'warn' | 'error'> = {
+  debug: 'log',
+  info: 'info',
+  warn: 'warn',
+  error: 'error'
+}
+
 const addLog = (message: string, level: 'debug' | 'info' | 'warn' | 'error', source: 'FE' | 'BE' = 'FE') => {
   const entry: LogEntry = {
     id: `${Date.now()}_${Math.random().toString(36).slice(2, 11)}`,
@@ -56,6 +65,9 @@ const addLog = (message: string, level: 'debug' | 'info' | 'warn' | 'error', sou
     nodeId: null
   }
   logs.value.push(entry)
+
+  const consoleMethod = logLevelMap[level]
+  console[consoleMethod](`[${source}] ${message}`)
 }
 
 const toast = useToast()
@@ -65,7 +77,7 @@ const clearLogs = () => {
   logs.value = []
 }
 
-const startResizeH = (e: MouseEvent) => {
+const startResizeH = (_e: MouseEvent) => {
   isResizingH.value = true
   document.addEventListener('mousemove', handleResizeH)
   document.addEventListener('mouseup', stopResizeH)
@@ -81,7 +93,7 @@ const stopResizeH = () => {
   document.removeEventListener('mouseup', stopResizeH)
 }
 
-const startResizeV = (e: MouseEvent) => {
+const startResizeV = (_e: MouseEvent) => {
   isResizingV.value = true
   document.addEventListener('mousemove', handleResizeV)
   document.addEventListener('mouseup', stopResizeV)
@@ -387,7 +399,6 @@ const handleStop = () => {
       @execute="handleExecute"
       @stop="handleStop"
       @new="handleNew"
-      @toggleFileList="fileListCollapsed = !fileListCollapsed"
     />
     <div class="main-content">
       <FileList

@@ -1,16 +1,16 @@
 {
-  "name": "111",
+  "name": "25",
   "version": "1.0",
   "nodes": [
     {
-      "id": "node_1775318466062",
+      "id": "node_1775360822925",
       "type": "input",
       "name": "数据输入",
       "icon": "📥",
       "category": "input",
       "position": {
-        "x": 110,
-        "y": 140
+        "x": 151,
+        "y": 211
       },
       "config": [
         {
@@ -34,14 +34,14 @@
       }
     },
     {
-      "id": "node_1775318468038",
+      "id": "node_1775360825132",
       "type": "output",
       "name": "数据输出",
       "icon": "📤",
       "category": "output",
       "position": {
-        "x": 398,
-        "y": 231
+        "x": 387,
+        "y": 302
       },
       "config": [],
       "inputs": [
@@ -57,9 +57,9 @@
   ],
   "edges": [
     {
-      "id": "edge_1775318470302",
-      "source": "node_1775318466062",
-      "target": "node_1775318468038",
+      "id": "edge_1775360827531",
+      "source": "node_1775360822925",
+      "target": "node_1775360825132",
       "sourceHandle": "",
       "targetHandle": ""
     }

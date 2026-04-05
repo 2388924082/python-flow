@@ -23,11 +23,20 @@ const emit = defineEmits<{
 
 const toast = inject<any>('toast')
 
+type TabType = 'logs' | 'terminal'
+const activeTab = ref<TabType>('logs')
 const filterLevel = ref<string | null>(null)
+const filterSource = ref<'BE' | 'FE' | 'ALL'>('ALL')
 
 const filteredLogs = (logs: LogEntry[]) => {
-  if (!filterLevel.value) return logs
-  return logs.filter(log => log.level === filterLevel.value)
+  let result = logs
+  if (filterSource.value !== 'ALL') {
+    result = result.filter(log => log.source === filterSource.value)
+  }
+  if (filterLevel.value) {
+    result = result.filter(log => log.level === filterLevel.value)
+  }
+  return result
 }
 
 const getLevelClass = (level: string) => `log-${level}`
@@ -58,8 +67,16 @@ const copyLogs = async (logs: LogEntry[]) => {
 <template>
   <div class="bottom-panel">
     <div class="panel-header">
-      <span class="panel-title">日志</span>
-      <div class="panel-actions">
+      <div class="panel-tabs" v-if="activeTab === 'logs'">
+        <button class="log-tab" :class="{ active: filterSource === 'ALL' }" @click="filterSource = 'ALL'">日志</button>
+        <button class="log-tab" :class="{ active: filterSource === 'FE' }" @click="filterSource = 'FE'">前端</button>
+        <button class="log-tab" :class="{ active: filterSource === 'BE' }" @click="filterSource = 'BE'">后端</button>
+      </div>
+      <div class="panel-tabs" v-if="activeTab === 'terminal'">
+        <button class="panel-tab" disabled>终端</button>
+      </div>
+      <div class="panel-spacer"></div>
+      <div class="panel-actions" v-if="activeTab === 'logs'">
         <select v-model="filterLevel" class="filter-select">
           <option :value="null">全部</option>
           <option v-for="level in levels" :key="level" :value="level">
@@ -68,10 +85,10 @@ const copyLogs = async (logs: LogEntry[]) => {
         </select>
         <button class="btn-clear" @click="copyLogs(logs)">复制</button>
         <button class="btn-clear" @click="emit('clear')">清空</button>
-        <button class="collapse-btn" @click="emit('toggleCollapse')">▼</button>
       </div>
+      <button class="collapse-btn" @click="emit('toggleCollapse')">▼</button>
     </div>
-    <div class="log-list">
+    <div class="log-list" v-if="activeTab === 'logs'">
       <div
         v-for="log in filteredLogs(logs)"
         :key="log.id"
@@ -81,6 +98,9 @@ const copyLogs = async (logs: LogEntry[]) => {
       <div v-if="logs.length === 0" class="empty-logs">
         暂无日志
       </div>
+    </div>
+    <div class="terminal-placeholder" v-if="activeTab === 'terminal'">
+      终端功能开发中...
     </div>
   </div>
 </template>
@@ -96,13 +116,43 @@ const copyLogs = async (logs: LogEntry[]) => {
 .panel-header {
   display: flex;
   align-items: center;
-  gap: var(--spacing-xs);
+  gap: var(--spacing-sm);
   padding: var(--spacing-xs) var(--spacing-md);
   border-bottom: 1px solid var(--border-color);
 }
 
-.panel-title {
-  font-weight: 500;
+.panel-tabs {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+.panel-tab,
+.log-tab {
+  padding: 2px var(--spacing-sm);
+  font-size: 12px;
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  transition: all var(--transition-fast);
+}
+
+.panel-tab:hover:not(:disabled),
+.log-tab:hover {
+  background: var(--bg-tertiary);
+}
+
+.panel-tab.active,
+.log-tab.active {
+  background: var(--accent-color);
+  color: white;
+}
+
+.panel-tab:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.panel-spacer {
   flex: 1;
 }
 
@@ -167,6 +217,15 @@ const copyLogs = async (logs: LogEntry[]) => {
 .log-debug .log-icon { opacity: 0.5; }
 .log-warn { background: rgba(255, 152, 0, 0.1); }
 .log-error { background: rgba(244, 67, 54, 0.1); }
+
+.terminal-placeholder {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-secondary);
+  font-size: 14px;
+}
 
 .empty-logs {
   padding: var(--spacing-lg);

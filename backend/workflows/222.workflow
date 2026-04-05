@@ -3,14 +3,14 @@
   "version": "1.0",
   "nodes": [
     {
-      "id": "node_1775314778017",
-      "type": "dynamic",
+      "id": "node_1775360889997",
+      "type": "input",
       "name": "数据输入",
       "icon": "📥",
       "category": "input",
       "position": {
-        "x": 183,
-        "y": 189
+        "x": 145,
+        "y": 221
       },
       "config": [
         {
@@ -34,16 +34,36 @@
       }
     },
     {
-      "id": "node_1775314779944",
-      "type": "dynamic",
-      "name": "数据输出",
-      "icon": "📤",
-      "category": "output",
+      "id": "node_1775360892004",
+      "type": "data_logger",
+      "name": "数据日志",
+      "icon": "📝",
+      "category": "debug",
       "position": {
-        "x": 457,
-        "y": 269
+        "x": 360,
+        "y": 305
       },
-      "config": [],
+      "config": [
+        {
+          "key": "level",
+          "name": "日志级别",
+          "type": "select",
+          "default": "info",
+          "options": [
+            "debug",
+            "info",
+            "warn",
+            "error"
+          ]
+        },
+        {
+          "key": "message",
+          "name": "自定义消息",
+          "type": "string",
+          "default": "",
+          "options": null
+        }
+      ],
       "inputs": [
         {
           "key": "data",
@@ -51,15 +71,24 @@
           "type": "json"
         }
       ],
-      "outputs": [],
-      "configValues": {}
+      "outputs": [
+        {
+          "key": "passthrough",
+          "name": "透传数据",
+          "type": "json"
+        }
+      ],
+      "configValues": {
+        "level": "info",
+        "message": ""
+      }
     }
   ],
   "edges": [
     {
-      "id": "edge_1775314782056",
-      "source": "node_1775314778017",
-      "target": "node_1775314779944",
+      "id": "edge_1775360893851",
+      "source": "node_1775360889997",
+      "target": "node_1775360892004",
       "sourceHandle": "",
       "targetHandle": ""
     }

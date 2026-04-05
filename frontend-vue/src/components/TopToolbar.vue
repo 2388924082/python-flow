@@ -12,7 +12,6 @@ const emit = defineEmits<{
   execute: []
   stop: []
   new: []
-  toggleFileList: []
 }>()
 
 const isDropdownOpen = ref(false)
@@ -50,7 +49,6 @@ const handleLoad = (name: string) => {
       <span class="workflow-name">{{ workflowName || '未命名工作流' }}</span>
     </div>
     <div class="toolbar-right">
-      <button class="btn btn-icon" @click="emit('toggleFileList')" title="切换文件列表">📐</button>
       <button class="btn btn-primary" @click="emit('execute')">执行</button>
       <button class="btn btn-secondary" @click="emit('stop')">停止</button>
     </div>
@@ -120,5 +118,11 @@ const handleLoad = (name: string) => {
 .btn-icon {
   padding: var(--spacing-xs);
   font-size: 16px;
+}
+
+.btn-icon.active {
+  background: var(--accent-color);
+  color: white;
+  border-radius: var(--radius-sm);
 }
 </style>
