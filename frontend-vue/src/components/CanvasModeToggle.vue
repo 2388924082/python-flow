@@ -5,7 +5,7 @@ const emit = defineEmits<{
   'mode-change': [mode: 'select' | 'pan']
 }>()
 
-const currentMode = ref<'select' | 'pan'>('select')
+const currentMode = ref<'select' | 'pan'>('pan')
 
 const setMode = (mode: 'select' | 'pan') => {
   currentMode.value = mode
