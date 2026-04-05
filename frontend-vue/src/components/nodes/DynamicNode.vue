@@ -116,6 +116,7 @@ const handleDelete = () => {
             class="field-input"
             @change="onFieldChange(field.key, $event)"
             @input="onFieldChange(field.key, $event)"
+            @mousedown.stop
           >
             <template v-if="field.type === 'select' && field.options">
               <option
