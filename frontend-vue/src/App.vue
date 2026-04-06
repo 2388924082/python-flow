@@ -2,45 +2,28 @@
 import { ref, onMounted, provide } from 'vue'
 import TopToolbar from './components/TopToolbar.vue'
 import FileList from './components/FileList.vue'
-import FloatingToolbar from './components/FloatingToolbar.vue'
 import WorkflowCanvas from './components/WorkflowCanvas.vue'
 import BottomPanel from './components/BottomPanel.vue'
 import SaveDialog from './components/SaveDialog.vue'
 import ToastContainer from './components/ToastContainer.vue'
 import ThemeSwitcher from './components/ThemeSwitcher.vue'
 import type { PluginDefinition, CategoryDefinition, Position } from './types/api'
-import { getNodes, listWorkflows, getCategories, renameWorkflow, deleteWorkflow } from './services/api'
+import type { NodeItem, EdgeItem } from './types/internal'
+import { getNodes, listWorkflows, getCategories, saveWorkflow, loadWorkflow as loadWorkflowApi, executeWorkflow, renameWorkflow, deleteWorkflow } from './services/api'
 import { useToast } from './composables/useToast'
 import { useLog } from './composables/useLog'
-import { useWorkflow } from './composables/useWorkflow'
 
 const { logs, addLog, clearLogs } = useLog()
 const toast = useToast()
 provide('toast', toast)
 
-const {
-  nodes,
-  edges,
-  currentWorkflow,
-  selectedNodeId,
-  addNode,
-  removeNode,
-  updateNodeConfig,
-  updateNodePosition,
-  selectNode,
-  addEdge,
-  removeNode: deleteNode,
-  removeEdge,
-  newWorkflow,
-  save,
-  load,
-  execute,
-  isDirty
-} = useWorkflow({ onLog: addLog })
-
 const plugins = ref<PluginDefinition[]>([])
 const categories = ref<CategoryDefinition[]>([])
 const workflowList = ref<string[]>([])
+const nodes = ref<NodeItem[]>([])
+const edges = ref<EdgeItem[]>([])
+const selectedNodeId = ref<string | null>(null)
+const currentWorkflow = ref<string | null>(null)
 const showSaveDialog = ref(false)
 const currentTaskId = ref<string | null>(null)
 const fileListWidth = ref(200)
@@ -89,57 +72,99 @@ const stopResizeV = () => {
 }
 
 const handleAddNode = (data: { id: string }, position: Position) => {
+  const id = `node_${Date.now()}`
   const plugin = plugins.value.find(p => p.id === data.id)
   if (!plugin) {
     addLog(`Plugin not found: ${data.id}`, 'error')
     return
   }
-  addNode(plugin, position)
+
+  const newNode: NodeItem = {
+    id,
+    type: 'dynamic',
+    position,
+    data: {
+      ...plugin,
+      configValues: plugin.config.reduce((acc: Record<string, unknown>, field: any) => {
+        acc[field.key] = field.default
+        return acc
+      }, {})
+    }
+  }
+  nodes.value = [...nodes.value, newNode]
+  addLog(`Added node: ${plugin.name}`, 'info')
 }
 
-const handleUpdateNodeConfig = (nodeId: string, key: string, value: unknown) => {
-  updateNodeConfig(nodeId, key, value)
-}
-
-const handlePositionChange = (nodeId: string, position: { x: number; y: number }) => {
-  updateNodePosition(nodeId, position)
-}
-
-const handleConnect = (connection: { source: string; target: string; sourceHandle?: string | null; targetHandle?: string | null }) => {
-  addEdge(connection.source, connection.target, connection.sourceHandle, connection.targetHandle)
+const handleSelectNode = (nodeId: string | null) => {
+  selectedNodeId.value = nodeId
 }
 
 const handleDeleteNode = (nodeId: string) => {
-  deleteNode(nodeId)
+  nodes.value = nodes.value.filter(n => n.id !== nodeId)
+  edges.value = edges.value.filter(e => e.source !== nodeId && e.target !== nodeId)
+  if (selectedNodeId.value === nodeId) {
+    selectedNodeId.value = null
+  }
+  addLog(`Deleted node: ${nodeId}`, 'info')
 }
 
-const handleDeleteEdge = (edgeId: string) => {
-  removeEdge(edgeId)
+const handleUpdateNodeConfig = (nodeId: string, key: string, value: unknown) => {
+  const node = nodes.value.find(n => n.id === nodeId)
+  if (node) {
+    node.data.configValues[key] = value
+    addLog(`Updated ${node.data.name}: ${key} = ${value}`, 'debug')
+  }
 }
+
+const handleConnect = (connection: { source: string; target: string }) => {
+  const id = `edge_${Date.now()}`
+  edges.value.push({
+    id,
+    source: connection.source,
+    target: connection.target
+  })
+  addLog(`Connected ${connection.source} -> ${connection.target}`, 'info')
+}
+
+provide('deleteNode', handleDeleteNode)
 
 const handleSave = async () => {
-  if (currentWorkflow.value) {
-    try {
-      await save(plugins.value)
-      toast.success('保存成功')
-      await handleLoadData()
-    } catch (e) {
-      toast.error(`保存失败: ${e instanceof Error ? e.message : '未知错误'}`)
-    }
-  } else {
-    showSaveDialog.value = true
-  }
+  showSaveDialog.value = true
 }
 
 const handleSaveConfirm = async (name: string) => {
   showSaveDialog.value = false
   currentWorkflow.value = name
+  const workflow = {
+    name: currentWorkflow.value,
+    version: '1.0',
+    nodes: nodes.value.map(n => ({
+      id: n.id,
+      type: n.data.id || n.type,
+      name: n.data.name,
+      icon: n.data.icon,
+      category: n.data.category,
+      position: n.position,
+      config: n.data.config,
+      inputs: n.data.inputs,
+      outputs: n.data.outputs,
+      configValues: n.data.configValues
+    })),
+    edges: edges.value.map(e => ({
+      id: e.id,
+      source: e.source,
+      target: e.target,
+      sourceHandle: e.sourceHandle || '',
+      targetHandle: e.targetHandle || ''
+    }))
+  }
   try {
-    await save(plugins.value)
-    toast.success('保存成功')
-    await handleLoadData()
+    await saveWorkflow(currentWorkflow.value, workflow as any)
+    addLog(`Saved workflow: ${currentWorkflow.value}`, 'info')
+    const workflows = await listWorkflows()
+    workflowList.value = workflows
   } catch (e) {
-    toast.error(`保存失败: ${e instanceof Error ? e.message : '未知错误'}`)
+    addLog(`Failed to save: ${e instanceof Error ? e.message : 'Unknown error'}`, 'error')
   }
 }
 
@@ -149,7 +174,40 @@ const handleSaveCancel = () => {
 
 const handleLoad = async (name: string) => {
   try {
-    await load(name, plugins.value)
+    const workflow = await loadWorkflowApi(name)
+    currentWorkflow.value = name
+
+    const loadedNodes = workflow.nodes.map((n: any) => {
+      const configValues = n.configValues || {}
+      const plugin = plugins.value.find(p => p.id === n.type || p.name === n.name)
+      return {
+        id: n.id,
+        type: 'dynamic',
+        position: n.position || { x: 0, y: 0 },
+        data: {
+          id: n.id,
+          name: n.name,
+          icon: n.icon || (plugin?.icon || '📦'),
+          category: n.category || (plugin?.category || ''),
+          type: n.type,
+          config: n.config || (plugin?.config || []),
+          inputs: n.inputs || (plugin?.inputs || []),
+          outputs: n.outputs || (plugin?.outputs || []),
+          configValues: configValues
+        }
+      }
+    })
+
+    const loadedEdges = (workflow.edges || []).map((e: any) => ({
+      id: e.id || `edge_${Date.now()}`,
+      source: e.source,
+      target: e.target,
+      sourceHandle: e.sourceHandle || null,
+      targetHandle: e.targetHandle || null
+    }))
+
+    nodes.value = loadedNodes
+    edges.value = loadedEdges
     addLog(`Loaded workflow: ${name}`, 'info')
   } catch (e) {
     addLog(`Failed to load: ${e instanceof Error ? e.message : 'Unknown error'}`, 'error')
@@ -157,7 +215,10 @@ const handleLoad = async (name: string) => {
 }
 
 const handleNew = () => {
-  newWorkflow()
+  currentWorkflow.value = null
+  nodes.value = []
+  edges.value = []
+  addLog('Created new workflow', 'info')
 }
 
 const handleLoadData = async () => {
@@ -193,7 +254,9 @@ const handleDelete = async (name: string) => {
   try {
     await deleteWorkflow(name)
     if (currentWorkflow.value === name) {
-      newWorkflow()
+      currentWorkflow.value = null
+      nodes.value = []
+      edges.value = []
     }
     await handleLoadData()
     addLog(`Deleted "${name}"`, 'info')
@@ -202,19 +265,28 @@ const handleDelete = async (name: string) => {
   }
 }
 
-onMounted(() => {
+onMounted(async () => {
   handleLoadData()
-  initLogWebSocket()
+  try {
+    const res = await fetch('/api/info')
+    const info = await res.json()
+    const wsUrl = `ws://${window.location.hostname}:${info.wsPort}/ws/logs`
+    initLogWebSocket(wsUrl)
+  } catch (e) {
+    initLogWebSocket(`ws://${window.location.host}/ws/logs`)
+  }
 })
 
 let logWs: WebSocket | null = null
+let wsUrl = `ws://${window.location.host}/ws/logs`
 
-const initLogWebSocket = () => {
+const initLogWebSocket = (url?: string) => {
   if (logWs) {
     logWs.close()
   }
-  const wsUrl = `ws://localhost:8000/ws/logs`
-  logWs = new WebSocket(wsUrl)
+  const targetUrl = url || wsUrl
+  wsUrl = targetUrl
+  logWs = new WebSocket(targetUrl)
 
   logWs.onopen = () => {
     addLog('Log stream connected', 'info')
@@ -237,7 +309,7 @@ const initLogWebSocket = () => {
 
   logWs.onclose = () => {
     logWs = null
-    setTimeout(initLogWebSocket, 3000)
+    setTimeout(() => initLogWebSocket(), 3000)
   }
 }
 
@@ -252,7 +324,23 @@ const handleExecute = async () => {
   }
   try {
     addLog('Starting workflow execution...', 'info')
-    const result = await execute()
+    const workflowData = {
+      name: currentWorkflow.value,
+      version: '1.0',
+      nodes: nodes.value.map(n => ({
+        id: n.id,
+        type: n.data.type || n.data.id || n.type,
+        name: n.data.name,
+        configValues: n.data.configValues,
+        position: n.position
+      })),
+      edges: edges.value.map(e => ({
+        id: e.id,
+        source: e.source,
+        target: e.target
+      }))
+    }
+    const result = await executeWorkflow(workflowData as any)
     currentTaskId.value = result.taskId
     addLog(`Execution started: ${result.taskId}`, 'info')
   } catch (e) {
@@ -311,12 +399,10 @@ const handleToggleMinimap = () => {
           :showMinimap="showMinimap"
           :style="{ flex: 1 }"
           @add-node="handleAddNode"
-          @select-node="selectNode"
+          @select-node="handleSelectNode"
           @delete-node="handleDeleteNode"
-          @delete-edge="handleDeleteEdge"
           @update-node-config="handleUpdateNodeConfig"
           @connect="handleConnect"
-          @position-change="handlePositionChange"
         />
         <div v-if="bottomPanelCollapsed" class="expand-btn-h" @click="bottomPanelCollapsed = false">▲</div>
         <template v-else>
@@ -409,35 +495,31 @@ const handleToggleMinimap = () => {
 .theme-switcher {
   position: fixed;
   top: 60px;
-  right: 20px;
+  right: 16px;
   z-index: 100;
 }
 
 .minimap-toggle {
   position: fixed;
-  bottom: 170px;
-  right: 20px;
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  background: var(--bg-secondary);
-  border: 1px solid var(--border-color);
+  top: 100px;
+  right: 16px;
+  z-index: 100;
+  width: 32px;
+  height: 32px;
   display: flex;
   align-items: center;
   justify-content: center;
-  cursor: pointer;
   font-size: 16px;
-  transition: all 0.2s;
-  z-index: 100;
+  cursor: pointer;
+  opacity: 0.6;
+  transition: opacity var(--transition-fast);
 }
 
 .minimap-toggle:hover {
-  background: var(--bg-tertiary);
-  transform: scale(1.1);
+  opacity: 1;
 }
 
 .minimap-toggle.active {
-  background: var(--accent-color);
-  color: white;
+  opacity: 1;
 }
 </style>

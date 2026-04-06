@@ -11,7 +11,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, HTTPException, Request, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 
 from engine import (
@@ -99,6 +99,16 @@ plugin_loader = PluginLoader()
 plugin_loader.scan(PLUGIN_DIR)
 
 executor = Executor(executions_dir=EXECUTIONS_DIR)
+
+
+@app.get("/api/info")
+def get_info(request: Request):
+    host = request.headers.get("host", "127.0.0.1:8765")
+    port = host.split(":")[-1] if ":" in host else "80"
+    return {
+        "wsPort": int(port),
+        "apiPort": int(port)
+    }
 
 
 @app.get("/api/nodes")
@@ -240,5 +250,7 @@ def stop_execution(task_id: str):
 
 
 if __name__ == "__main__":
+    import os
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    port = int(os.environ.get('API_PORT', '8766'))
+    uvicorn.run(app, host="0.0.0.0", port=port)

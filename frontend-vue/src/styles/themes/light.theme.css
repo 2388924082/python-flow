@@ -1,16 +1,16 @@
-:root {
+body.theme-light {
   --bg-primary: #ffffff;
-  --bg-secondary: #f3f3f3;
-  --bg-tertiary: #e8e8e8;
-  --text-primary: #333333;
-  --text-secondary: #666666;
-  --border-color: rgba(0, 0, 0, 0.06);
-  --accent-color: #0078d4;
-  --accent-hover: #106ebe;
-  --success-color: #4caf50;
-  --warning-color: #ff9800;
-  --error-color: #e74c3c;
-  --info-color: #2196f3;
+  --bg-secondary: #f6f8fa;
+  --bg-tertiary: #eaeef2;
+  --text-primary: #1f2328;
+  --text-secondary: #656d76;
+  --border-color: rgba(27, 31, 36, 0.06);
+  --accent-color: #0969da;
+  --accent-hover: #0550ae;
+  --success-color: #1a7f37;
+  --warning-color: #9a6700;
+  --error-color: #cf222e;
+  --info-color: #0550ae;
 
   --spacing-xs: 4px;
   --spacing-sm: 8px;

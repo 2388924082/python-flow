@@ -1,6 +1,6 @@
 import type { PluginDefinition, Workflow, ExecutionState, CategoryDefinition } from '../types/api'
 
-const API_BASE = 'http://localhost:8000/api'
+const API_BASE = '/api'
 
 export async function getNodes(): Promise<PluginDefinition[]> {
   const res = await fetch(`${API_BASE}/nodes`)

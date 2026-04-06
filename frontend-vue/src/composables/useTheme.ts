@@ -14,18 +14,11 @@ export const themes: Theme[] = [
   { name: 'dark', label: 'GitHub Dark', icon: '🌙' }
 ]
 
-const currentTheme = ref<ThemeName>('vscode-dark')
+const currentTheme = ref<ThemeName>('dark')
 
-const loadTheme = (themeName: ThemeName) => {
-  const linkId = 'theme-stylesheet'
-  let link = document.getElementById(linkId) as HTMLLinkElement | null
-  if (!link) {
-    link = document.createElement('link')
-    link.id = linkId
-    link.rel = 'stylesheet'
-    document.head.appendChild(link)
-  }
-  link.href = `/src/styles/themes/${themeName}.theme.css`
+const applyTheme = (themeName: ThemeName) => {
+  document.body.classList.remove('theme-vscode-dark', 'theme-light', 'theme-dark')
+  document.body.classList.add(`theme-${themeName}`)
   currentTheme.value = themeName
   localStorage.setItem('theme', themeName)
 }
@@ -34,11 +27,11 @@ const savedTheme = localStorage.getItem('theme') as ThemeName | null
 if (savedTheme && themes.some(t => t.name === savedTheme)) {
   currentTheme.value = savedTheme
 }
-loadTheme(currentTheme.value)
+applyTheme(currentTheme.value)
 
 export function useTheme() {
   const setTheme = (themeName: ThemeName) => {
-    loadTheme(themeName)
+    applyTheme(themeName)
   }
 
   const getThemeLabel = (themeName: ThemeName) => {
